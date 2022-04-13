@@ -1,0 +1,21 @@
+OK zwiększyć ilość znaków w polu "Inwestycja"
+OK formatowanie przy SetNewEntryBgColor(...) musi być horizontal alignment ustawione LEFT a nie center
+OK ograniczyć ilość znaków w polu vat (ale tak żeby dało się wpisać "mix")
+OK przy dzieleniu faktury trzeba ustawić możliwość pozostawienia pustego pola "Opis"
+- ustawić: Enter zmienia pole w GUI
+OK kolejna str. poprz. dokumentu powinna chować pola do wpisywania czegokolwiek
+- jak się zrobi maksymalizację programu to "Program Output" powinien dostosowywać się do całości
+- "Program Output" powinien być listą z buttonami: usuń / edytuj / podziel
+- nie działa opcja "czy na pewno chcesz wyjść przed zapisaniem zmian" - wyskakuje okienko pomimo zakończenia pracy z plikami
+- zmienić komunikat końcowy na opcję wyboru "Czy zostały zamknięte wszystkie otwarte wcześniej dokumenty, które będą przetwarzane w programie ? Opcja: TAK / NIE
+- przy zmianie bg color (zarówno w kolumnie company jak i payment) rozmiar czcionki ustawia na default 11 a powinno być 10
+
+OK błędy przy odhaczeniu checkboxów
+- w pliku wyjściowym kolumna "nazwa" oraz "sposób płatności" zapisane zostały czcionką Arial o rozmiarze 4
+- czasem nie przepisuje do kolumny "komentarze" z istniejących pozycji do pliku wynikowego
+- jeżeli coś w polach zaczyna się od spacji lub tabulatora -> usuń te białe znaki
+- pole "płatność" zmienić na typ (T, G, P) dodać pola dzień mc rok, dodać pole jeśli "G rozl."
+- dodać pole "+" które będzie dodawało pole "towar" do wpisania ceny lub wartości za podaną ilość, takich pól niech będzie np. max. 10
+- dodać obsługę * lub / w klasie Price (wyszukaj tekst "TODO")
+- zamienić "Płacił" z "Płatność / Termin" i jak termin to nie wyświetlać pola płacił (albo go wyłączać)
+- prawidłowo przenosi i zmienia nazwę pliku (pierwszy pdf dodany w programie... hmm ?) a jednak wyświetla komunikat o błędzie w ProgramOutput

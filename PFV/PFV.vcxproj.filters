@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="app.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MainForm.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Globals.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Fv-func.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FvClasses.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FvSplit.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SplitCountAskForm.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SplitFvForm.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicExcel.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="conversion.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dirent.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ExcelFormat.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Functions.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Price.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SimplExpr.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AssemblyInfo.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="MainForm.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Globals.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Fv-func.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="FvClasses.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="FvSplit.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="SplitCountAskForm.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="SplitFvForm.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicExcel.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="ExcelFormat.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Functions.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Price.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="SimplExpr.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="app.ico">
+      <Filter>Resources</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.aps" />
+    <None Include="Zestawienie Faktur.xls" />
+  </ItemGroup>
+</Project>
