@@ -61,8 +61,21 @@ namespace PFV
 		bool NewFvAdd(void);
 		void CheckForDuplicates(const Fv_ptr& fv);
 		//throws if there are duplicates: in program input or in data loaded from xls file
+		
+		void TryRecognizeCurrFile();
+
+		void txtDateSameAsFileLastModDate();
+
+		bool TryRecoAutopayInvoice(std::wstring rx_pattern);	// Autopay
+		bool TryRecoVTSInvoice(std::wstring rx_pattern);		// VTS Polska
+		bool TryRecoOrangeInvoice(std::wstring rx_pattern);		// Orange		
+		bool TryRecoIglotechInvoice(std::wstring rx_pattern);	// Iglotech
+		bool TryRecoNaviInvoice(std::wstring rx_pattern);		// NaviFleet
+		bool TryRecoTCHWInvoice(std::wstring rx_pattern);		// TCHW
+		bool TryRecoWienkraInvoice(std::wstring rx_pattern);	// Wienkra
+
 		bool NewNonFvAdd(void);
-		void AnotherPagePrepare(void);
+		void WriteToTextBoxNextPageName(void);
 		bool AnotherPageAdd(void);
 
 		bool PromptForSaving(void);
@@ -1032,6 +1045,8 @@ namespace PFV
 				txtNewNotFvFilename->Visible = true;
 				this->ClearAllInputs();
 				label1->Text = "Nowa nazwa pliku";
+				if (chbAnotherPage->Checked)
+					WriteToTextBoxNextPageName();
 			}
 			else
 			{
@@ -1046,7 +1061,7 @@ namespace PFV
 			{
 				chbIsFv->Checked = false;
 				chbIsFv->Visible = false;
-				this->AnotherPagePrepare();
+				this->WriteToTextBoxNextPageName();
 			}
 			else
 			{

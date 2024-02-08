@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include "ExcelFormat.h"
 #include "Price.h"
+#include <filesystem>
 
 // column indices in xls file
 enum COLS {
@@ -28,6 +29,62 @@ using namespace ExcelFormat;
 const short max_whopayed_size = 8;
 const short max_payment_size = 20;
 
+struct DateStruct
+{
+public:
+	DateStruct();
+	DateStruct(std::string d, char delim = '.');
+	DateStruct(unsigned short d, unsigned short m, unsigned short y);
+
+	unsigned short day;
+	unsigned short month;
+	unsigned short year;
+
+	bool isValid() const;
+
+	std::string GetFullDate(char delim = '.') const;
+
+	void SetDate(std::string d, char delim = '.');
+	void SetDate(unsigned short d, unsigned short m, unsigned short y);
+
+	inline bool operator >(System::DateTime& dt) const
+	{
+		if (year > dt.Year)
+			return true;
+		else
+		{
+			if (year == dt.Year && month > dt.Month)
+				return true;
+			else
+			{
+				if (year == dt.Year && month == dt.Month && day > dt.Day)
+					return true;
+			}
+		}
+		return false;
+	}
+
+	inline bool operator ==(const DateStruct& date) const
+	{
+		return date.day == day && date.month == month && date.year == year;
+	}
+
+	DateStruct (const std::filesystem::file_time_type& ftt)
+	{
+		using namespace std::chrono;
+		auto sctp = time_point_cast<system_clock::duration>(ftt - std::filesystem::file_time_type::clock::now()
+			+ system_clock::now());
+		auto tt = system_clock::to_time_t(sctp);
+		std::tm t = *std::localtime(&tt);
+		std::stringstream ss;
+		ss << std::put_time(&t, "%d.%m.%Y");
+		*this = ss.str();
+	}
+
+private:
+
+};
+
 class ScannedFile 
 {
 
@@ -35,6 +92,7 @@ public:
 	std::wstring old_name{ L"" };
 	mutable std::wstring new_name{ L"" };
 	mutable bool is_fv{ true }; 
+	DateStruct last_mod;
 
 	ScannedFile() {}
 
@@ -80,28 +138,6 @@ public:
 private:
 	static int counter;
 	std::string extension;
-};
-
-struct DateStruct
-{
-public:
-	DateStruct();
-	DateStruct(std::string d, char delim = '.');
-	DateStruct(unsigned short d, unsigned short m, unsigned short y);
-
-	unsigned short day;
-	unsigned short month;
-	unsigned short year;
-
-	bool isValid() const;
-
-	std::string GetFullDate(char delim = '.') const;
-
-	void SetDate(std::string d, char delim = '.');
-	void SetDate(unsigned short d, unsigned short m, unsigned short y);
-
-private:
-
 };
 
 class FvInfo

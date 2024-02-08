@@ -43,7 +43,7 @@ std::string FvList::GetDataFromXlsFile(std::string fv_file_name, const short & r
 	}
 
 	sheet = xls->GetWorksheet(0);
-	xls_out->New(*xls);
+	xls_out->New(1);
 
 	std::string prev_date = "", warnings = "";
 
@@ -138,23 +138,6 @@ void FvList::DrawDateSeparator(USHORT row, const rFvIter &it)
 	cfmt->set_borderlines(0);
 }
 
-void FvList::SetPaymentBgColor(USHORT row, const rFvIter &it)
-{
-	std::string pstat{ (*it)->GetPayment() };
-	if (pstat[0] == 'T' ||									// np. T: 11.10.2018     (termin p³atnoœci = nierozliczona faktura)
-			pstat == "G" || pstat == "g")					// np. G lub g			(nierozliczona gotówka)
-		cfmt->set_background(MAKE_COLOR2(ExcelFormat::EGA_YELLOW, 0));
-	else
-		cfmt->set_background(0, 0x20C0);			// default color
-	
-	cfmt->set_alignment(EXCEL_VALIGN_CENTRED);
-	sheet_out->Cell(row, PAYMENT_STATUS)->SetFormat(*cfmt);
-	cfmt->set_alignment(EXCEL_HALIGN_CENTRED);
-	sheet_out->Cell(row, PAYMENT_STATUS)->SetFormat(*cfmt);
-	
-	cfmt->set_background(0, 0x20C0);			// default color
-}
-
 void FvList::SetNewEntryBgColor(USHORT row, USHORT col, const rFvIter& it, bool is_new_fv)
 {
 	if (is_new_fv)
@@ -174,14 +157,33 @@ void FvList::PrepareXLSData(const VecFv_ptr &vecNewFvs)
 {
 	// Merge UI data with already loaded .xls records
 	std::copy(vecNewFvs.begin(), vecNewFvs.end(), std::back_inserter(vecOldFvInfo));
+
 	// Sort by date in Excel-style
 	std::sort(vecOldFvInfo.begin(), vecOldFvInfo.end(), CompareFvDates());
+
+	// below is no good, the duplicates can be not adjacent which is required with std::unique
+	// 
+	//int s = vecOldFvInfo.size();
+
+	//VecFv_ptr unique_fv_vec(vecOldFvInfo.begin(), std::unique(vecOldFvInfo.begin(), vecOldFvInfo.end(), [](const Fv_ptr& fv1, const Fv_ptr& fv2) {
+	//	return fv1->date == fv2->date && fv1->GetInvoiceNumber() == fv2->GetInvoiceNumber() && fv1->GetInvestition() == fv2->GetInvestition();
+	//	}));
+
+	//vecOldFvInfo = std::move(unique_fv_vec);
+
+	//MessageBox::Show(strtoustr("Got rid of "+ std::to_string(s - vecOldFvInfo.size()) + " duplicates."));
 
 	sheet_out = xls_out->GetWorksheet(0);
 	xfmg = std::make_unique<XLSFormatManager>(*xls_out);
 	ExcelFont ft;
-	ft.set_height(80);			// do sprawdzenia !!!!
+	ft.set_height(200);			// do sprawdzenia !!!!
+	ft.set_font_name(L"Calibri");
 	cfmt = std::make_unique<CellFormat>(*xfmg, ft);
+	CellFormat cf(*xfmg);
+	cf.set_font(ft);
+	cf.set_alignment(EXCEL_ALIGNMENT::EXCEL_HALIGN_CENTRED | EXCEL_ALIGNMENT::EXCEL_VALIGN_CENTRED);
+	CellFormat date_fmt(*xfmg);
+	date_fmt.set_format_string("DD.MM.YYYY");
 
 	USHORT row = 0;
 
@@ -189,11 +191,16 @@ void FvList::PrepareXLSData(const VecFv_ptr &vecNewFvs)
 	{
 		if ((*it)->GetMonthNumber() && it >= vecOldFvInfo.rend()-rfe)
 		{
+			//sheet_out->Cell(row, DATE_COL)->SetFormat(date_fmt);
 			sheet_out->Cell(row, DATE_COL)->SetString((*it)->GetFvFullDate().c_str());
+			sheet_out->Cell(row, INVESTITION)->SetFormat(cf);
+			sheet_out->Cell(row, DESCRIPTION)->SetFormat(cf);
+			sheet_out->Cell(row, FV_IDENT)->SetFormat(cf);
+			sheet_out->Cell(row, NETVAL)->SetFormat(cf);
+			sheet_out->Cell(row, GROSVAL)->SetFormat(cf);
+			sheet_out->Cell(row, WHO_PAYED)->SetFormat(cf);
 			//DrawDateSeparator(row, it);			<-- works but causes formatting issues in xls file
 			sheet_out->Cell(row, COMPANY)->Set((*it)->GetCompany().c_str());
-			bool is_new = std::find(vecNewFvs.rbegin(), vecNewFvs.rend(), *it) != vecNewFvs.rend();
-			SetNewEntryBgColor(row, COMPANY, it, is_new);	// to distinguish new entries from old in xls file
 			sheet_out->Cell(row, INVESTITION)->Set((*it)->GetInvestition().c_str());
 			sheet_out->Cell(row, DESCRIPTION)->Set((*it)->description.c_str());
 			sheet_out->Cell(row, FV_IDENT)->Set((*it)->GetInvoiceNumber().c_str());
@@ -201,9 +208,10 @@ void FvList::PrepareXLSData(const VecFv_ptr &vecNewFvs)
 			sheet_out->Cell(row, GROSVAL)->Set((*it)->gross_value.GetPrice());
 			sheet_out->Cell(row, WHO_PAYED)->Set((*it)->GetPayingPerson().c_str());
 			sheet_out->Cell(row, PAYMENT_STATUS)->Set((*it)->GetPayment().c_str());
-			SetPaymentBgColor(row, it);
-			
 			sheet_out->Cell(row, COMMENTS)->Set((*it)->comments.c_str());
+			bool is_new = std::find(vecNewFvs.rbegin(), vecNewFvs.rend(), *it) != vecNewFvs.rend();
+			if (is_new) 
+				sheet_out->Cell(row, COMMENTS+1)->Set("<---- NEW");
 
 			row++;
 

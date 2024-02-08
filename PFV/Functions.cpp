@@ -124,7 +124,8 @@ int getdir(std::string dir, std::vector<std::string> &files, bool recursive)
 
  std::wstring & wstr_toupper(std::wstring &wstr)
  {
-	 std::transform(wstr.begin(), wstr.end(), wstr.begin(), [](wchar_t wc) { return toupper(wc); });
+	 static auto loc = std::locale("");
+	 std::transform(wstr.begin(), wstr.end(), wstr.begin(), [](wchar_t wc) { return std::toupper(wc, loc); });
 	 return wstr;
  }
 
@@ -136,7 +137,8 @@ int getdir(std::string dir, std::vector<std::string> &files, bool recursive)
 
  std::wstring & wstr_tolower(std::wstring &ws)
 {
-	std::transform(ws.begin(), ws.end(), ws.begin(), [](wchar_t c) { return tolower(c); });
+	static auto loc = std::locale("");
+	std::transform(ws.begin(), ws.end(), ws.begin(), [](wchar_t c) { return std::tolower(c, loc); });
 	return ws;
 }
 

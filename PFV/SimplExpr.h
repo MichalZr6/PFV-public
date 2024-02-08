@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
+#include <set>
 
 class SimplExpr
 {
@@ -21,6 +22,12 @@ public:
     double getValue() const;
 
 private:
+    static const char plus = '+';
+    static const char minus = '-';
+    static const char multipl = '*';
+    static const char div = '/';
+    static const std::set<char> const_signs;
+
     std::string expr {""};
     std::vector<std::pair<double, char>> nums {};
 
@@ -28,7 +35,8 @@ private:
     bool tryAddNum(std::string &num, char sign);
     bool is_num(const std::string &num) const;
     std::string & skip_ws(std::string &str) const;
-
+    void replace_comma_with_point(std::string& num) const;
+    double priority_calc(std::vector<std::pair<double, char>>::const_iterator &iter) const;
 };
 
 #endif // SIMPLEXPR_H

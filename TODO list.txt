@@ -19,3 +19,7 @@ OK błędy przy odhaczeniu checkboxów
 - dodać obsługę * lub / w klasie Price (wyszukaj tekst "TODO")
 - zamienić "Płacił" z "Płatność / Termin" i jak termin to nie wyświetlać pola płacił (albo go wyłączać)
 - prawidłowo przenosi i zmienia nazwę pliku (pierwszy pdf dodany w programie... hmm ?) a jednak wyświetla komunikat o błędzie w ProgramOutput
+- nieprawidłowe informacje wyświetlane przy podziale faktury (w oknie po prawej, informacja o skutkach podziału)
+- przy dodawaniu większej liczby plików "nie-faktur" nie uzupełnia automatycznie pola z nazwą, w ogóle jest błąd dodawania w takim przypadku
+- ZŁE WYŚWIETLANIE POLSKICH ZNAKÓW W SPLIT_FV_FORM np. sprzęt, narzędzia - rozwój firmy
+- czasami zmienia nazwę pliku pdf i przenosi go, a potem próbuje zrobić to jeszcze raz i generuje błąd do ProgramOutput że się nie udało bo nie może go znaleźć -> co powoduje błąd ? może niech poszuka czy plik już został przeniesiony ?

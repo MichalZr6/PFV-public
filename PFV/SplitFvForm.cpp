@@ -134,7 +134,7 @@ void ProjektFaktury::SplitFvForm::txtInvestition_TextChanged
 (System::Object^ sender, System::EventArgs^ e)
 {
 	std::unordered_set<std::wstring> inv_set;
-	std::wstring search_string = ustrtowstr(txtInvestition->Text->ToString());
+	auto const search_string{ ustrtowstr(txtInvestition->Text->ToString()) };
 	unsigned short int i = 1;
 
 	rtxtDynamicOutput->Clear();
@@ -151,14 +151,17 @@ void ProjektFaktury::SplitFvForm::txtInvestition_TextChanged
 		Globals::fv_list.SearchInvestition(search_string, inv_set);		// search in records from XLS file
 		Globals::SearchInvestition(search_string, inv_set);			// search in already added FvInfo companies
 
+		auto sc = search_string;
+
 		if (inv_set.size() > 0)
 		{
 			rtxtDynamicOutput->Visible = true;
 			rtxtDynamicOutput->Text = "Wybierz z klawiatury nr inwestycji:\n";
-			for (auto it : inv_set)
+			for (auto const &it : inv_set)
 			{
+				std::wstring inv = it;
 				if (i > MAX_DYNAMIC_SHOW) break;
-				if (wstr_tolower(search_string) == wstr_tolower(it))
+				if (wstr_tolower(sc) == wstr_tolower(inv))
 				{
 					txtInvestition->Text = wstrtoustr(it);
 					txtDescription->Focus();

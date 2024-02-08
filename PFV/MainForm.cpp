@@ -1,5 +1,7 @@
 #include "MainForm.h"
 
+#include <regex>
+
 using namespace System;
 using namespace System::Windows::Forms;
 
@@ -50,6 +52,7 @@ void PFV::MainForm::btnAdd_Click(System::Object ^ sender, System::EventArgs ^ e)
 	Globals::curr_file++;
 	ptr = Globals::curr_file;
 	this->CheckActFile();
+	chbIsFv_CheckedChanged(sender, e);
 }
 void PFV::MainForm::btnSplit_Click(System::Object^  sender, System::EventArgs^  e)
 {
@@ -77,6 +80,7 @@ void PFV::MainForm::MainForm_Load(System::Object^ sender, System::EventArgs^ e)
 	{
 		Globals::curr_file = Globals::files.cbegin();
 		this->LoadXLSRecords();
+		TryRecognizeCurrFile();
 		ManageForm(FormState::STARTING);
 	}
 
@@ -287,11 +291,21 @@ void PFV::MainForm::LoadRawFiles(void)
 {
 	std::vector<ScannedFile> vec;
 
-	if (getdir(ustrtostr(txtFvDir->Text->ToString()), vec) > 0)
+	for (auto const &d : std::filesystem::directory_iterator(ustrtostr(txtFvDir->Text->ToString())))
 	{
-		MessageBox::Show("B³¹d funkcji getdir.\nNie uda³o siê odczytaæ plików z lokalizacji: "
+		if (!d.is_directory())
+		{
+			ScannedFile f(d.path().filename().wstring(), L"", d.path().extension().string());
+			f.last_mod = d.last_write_time();
+			vec.push_back(std::move(f));
+		}
+	}
+
+	if (vec.empty())
+	{
+		MessageBox::Show("Brak plików w lokalizacji: "
 			+ txtFvDir->Text->ToString());
-		return ;
+		return;
 	}
 
 	for (auto const &it : vec)
@@ -391,13 +405,19 @@ void PFV::MainForm::CheckActFile(void)
 	else if (Globals::curr_file == Globals::files.cbegin())
 	{
 		if (Globals::vecFvFromImg.empty())		// all entries have been deleted
+		{
 			ManageForm(FormState::STARTING);
+			TryRecognizeCurrFile();
+		}
 		else
 			MessageBox::Show("Error... vecFvFromImg has elements,"
 				+" but curr_file == files vec begin()");
 	}
 	else
+	{
 		this->ManageForm(FormState::ADDING_DELETING);
+		TryRecognizeCurrFile();
+	}
 }
 
 // Reading data from UI inputs 
@@ -405,16 +425,16 @@ void PFV::MainForm::CheckActFile(void)
 void PFV::MainForm::SetFvInfoFromInputs(Fv_ptr & fv)
 {
 	std::string errmsg{ "" };
-	
+
 	fv->SetFile(&*Globals::curr_file);
-	
+
 	System::String::IsNullOrWhiteSpace(txtCompany->Text) ?
-	errmsg += "Wymagane jest podanie nazwy firmy.\n" :
-	fv->SetCompany(ustrtowstr(txtCompany->Text));
+		errmsg += "Wymagane jest podanie nazwy firmy.\n" :
+		fv->SetCompany(ustrtowstr(txtCompany->Text));
 
 	System::String::IsNullOrWhiteSpace(txtInvest->Text) ?
-	errmsg += "Wymagane jest podanie nazwy inwestycji.\n" :
-	fv->SetInvestition(ustrtowstr(txtInvest->Text));
+		errmsg += "Wymagane jest podanie nazwy inwestycji.\n" :
+		fv->SetInvestition(ustrtowstr(txtInvest->Text));
 
 	fv->SetDescription(ustrtowstr(txtDescr->Text));		// may be empty
 
@@ -442,6 +462,14 @@ void PFV::MainForm::SetFvInfoFromInputs(Fv_ptr & fv)
 	fv->date.SetDate(System::Convert::ToUInt16(txtDay->Text), 
 					System::Convert::ToUInt16(txtMonth->Text),
 					System::Convert::ToUInt16(txtYear->Text));
+
+	if (fv->date > System::DateTime::Now)
+	{
+		System::Exception^ e =
+			gcnew System::Exception("Data jest z przysz³oœci.\n");
+		e->Source = "B³¹d wygenerowany przez pola daty.";
+		throw e;
+	}
 	
 	if(!fv->date.isValid())
 	{
@@ -612,6 +640,185 @@ void PFV::MainForm::CheckForDuplicates(const Fv_ptr &fv)
 		throw e;
 	}
 }
+void PFV::MainForm::TryRecognizeCurrFile()
+{
+	// TODO: iterate these functions in a loop... through map<company, regex>
+	// check if there are no dbl matches
+	TryRecoAutopayInvoice(L"([0-9])+(202[0-9])(APT)\\.pdf");
+	TryRecoVTSInvoice(L"(CP([0-9]{3})([0-9]{2}).*)\\.pdf");		// ex. CP02302I0494, CP02303I0286
+	TryRecoOrangeInvoice(L"(FAKTURA-P-[0-9]*-[0-9]*-[0-9]*)\\.pdf");		// ex. FAKTURA-P-16899138-2669260577-00001763
+	TryRecoIglotechInvoice(L".*FS-KAT_([0-9]+)_([0-9]{2})_([0-9]{4})_[0-9]{6}([0-9]{2}).*\\.pdf");	// ex. (S)FS-KAT_175_09_2023_20230918_1201 Strzelecka
+	TryRecoNaviInvoice(L".*NAVI_([0-9]+)_([0-9]{2})_([0-9]{4}).*\\.pdf");
+	TryRecoTCHWInvoice(L".*FV_([0-9]+)_([0-9]{2})_([0-9]{4}).*\\.PDF");
+	TryRecoWienkraInvoice(L".*Dok_FV-([0-9]+)-([0-9]+).*\\.pdf");
+}
+void PFV::MainForm::txtDateSameAsFileLastModDate()
+{
+	this->txtDay->Text = strtoustr(std::to_string(Globals::curr_file->last_mod.day));
+	this->txtMonth->Text = strtoustr(std::to_string(Globals::curr_file->last_mod.month));
+	this->txtYear->Text = strtoustr(std::to_string(Globals::curr_file->last_mod.year));
+}
+bool PFV::MainForm::TryRecoAutopayInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		this->txtCompany->Text = "Autopay";
+		this->txtInvest->Text = "";
+		this->txtFvIdent->Text = wstrtoustr(f->old_name.substr(0, 4)
+			+ L"/" + std::to_wstring(f->last_mod.month)
+			+ L"/" + std::to_wstring(f->last_mod.year)
+			+ L"/APT");
+		this->txtNetVal->Text = "10,57";
+		this->txtGrossVal->Text = "13,00";
+		this->txtDescr->Text = "A4";
+		this->txtWhoPayed->Text = "MZ";
+		this->txtPayment->Text = "G";
+		txtDateSameAsFileLastModDate();
+		this->txtFvIdent->Focus();
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoVTSInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		this->txtCompany->Text = "VTS Polska";
+		this->txtInvest->Text = "";
+		this->txtFvIdent->Text = wstrtoustr(sm[1]);
+		this->txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		this->txtMonth->Text = wstrtoustr(sm[3]);
+		this->txtYear->Text = L"2"+ wstrtoustr(sm[2]);
+		this->cbTax->Text = "23";
+		this->txtPayment->Text = "T: ";
+
+		this->txtInvest->Focus();
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoOrangeInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		this->txtCompany->Text = "Orange";
+		this->txtInvest->Text = "miesiêczne koszty firmy";
+		this->txtFvIdent->Text = wstrtoustr(sm[1]);
+		this->cbTax->Text = "23";
+		this->txtPayment->Text = "T: ";
+		txtDateSameAsFileLastModDate();
+
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoIglotechInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		this->txtCompany->Text = "Iglotech";
+		this->txtFvIdent->Text = wstrtoustr(L"SFS-KAT-"+ sm[1].str() +L"-"+ sm[2].str() +L"-"+ 
+											sm[3].str());
+		this->txtDay->Text = wstrtoustr(sm[4]);
+		this->txtMonth->Text = wstrtoustr(sm[2]);
+		this->txtYear->Text = wstrtoustr(sm[3]);
+		this->cbTax->Text = "23";
+		this->txtPayment->Text = "T: ";
+
+		this->txtInvest->Focus();
+
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoNaviInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		this->txtCompany->Text = "Navifleet";
+		this->txtFvIdent->Text = wstrtoustr(L"NAVI-" + sm[1].str() + L"-" + sm[2].str() + L"-" +
+			sm[3].str());
+		this->txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		this->txtMonth->Text = wstrtoustr(sm[2]);
+		this->txtYear->Text = wstrtoustr(sm[3]);
+
+		this->txtInvest->Text = strtoustr("miesiêczne koszty firmy");
+		this->txtDescr->Text = strtoustr("gps");
+		this->txtNetVal->Text = strtoustr("66");
+		this->txtGrossVal->Text = strtoustr("81,18");
+		this->cbTax->Text = "23";
+		this->txtPayment->Text = "T: ";
+
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoTCHWInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		this->txtCompany->Text = "TCHW";
+		this->txtFvIdent->Text = wstrtoustr(L"FV/" + sm[1].str() + L"/" + sm[2].str() + L"/" +
+			sm[3].str());
+		this->txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		this->txtMonth->Text = wstrtoustr(sm[2]);
+		this->txtYear->Text = wstrtoustr(sm[3]);
+		this->cbTax->Text = "23";
+		this->txtPayment->Text = "T: ";
+
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoWienkraInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		this->txtCompany->Text = "Wienkra";
+		this->txtFvIdent->Text = wstrtoustr(L"FV/"+ sm[1].str() + L"/" + sm[2].str());
+		this->txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		this->txtMonth->Text = strtoustr(std::to_string(f->last_mod.month));
+		this->txtYear->Text = wstrtoustr(L"20"+ sm[2].str());
+
+		return true;
+	}
+	return false;
+}
+
 bool PFV::MainForm::NewNonFvAdd(void)
 {
 	System::String ^text = txtNewNotFvFilename->Text;
@@ -621,7 +828,7 @@ bool PFV::MainForm::NewNonFvAdd(void)
 
 		if (Globals::files.count(f) != 0)
 		{
-			MessageBox::Show("Plik o nowej nazwie [" + text + "] zosta³ ju¿ dodany.");
+			MessageBox::Show("Plik o nazwie [" + text + "] zosta³ ju¿ dodany.");
 			return false;
 		}
 		else
@@ -637,31 +844,35 @@ bool PFV::MainForm::NewNonFvAdd(void)
 		return false;
 	}
 }
-void PFV::MainForm::AnotherPagePrepare(void)
+void PFV::MainForm::WriteToTextBoxNextPageName(void)
 {
-	auto ptr = *std::prev(Globals::curr_file);
+	auto file_ptr = *std::prev(Globals::curr_file);
 	std::wstring num_page;
-	size_t pos = ptr.new_name.find(L"str.");
+	size_t pos = file_ptr.new_name.find(L"str.");
 	if (pos != std::wstring::npos)
 	{
-		num_page = ptr.new_name.substr(pos + 5);
+		num_page = file_ptr.new_name.substr(pos + 5);
 		auto num_page_int = convert::numeric_cast<int>(num_page);
 		num_page_int++;
-		ptr.new_name.erase(pos - 1);
+		file_ptr.new_name.erase(pos - 1);
 		num_page = L" str. " + std::to_wstring(num_page_int);
 	}
 	else
 		num_page = L" str. 2";
 
-	ptr.new_name += num_page;
-	this->txtNewNotFvFilename->Text = wstrtoustr(ptr.new_name);
-	if (ptr.is_fv)
-		txtNewNotFvFilename->Enabled = false;
+	file_ptr.new_name += num_page;
+	this->txtNewNotFvFilename->Text = wstrtoustr(file_ptr.new_name);
 }
 bool PFV::MainForm::AnotherPageAdd(void)
 {
-	auto check = this->NewNonFvAdd();
-	this->txtNewNotFvFilename->Clear();
+	bool check;
+	//another page might be fv...
+	//if(Globals::curr_file->is_fv)
+	//	blabla
+	//else
+		check = this->NewNonFvAdd();
+	
+	txtNewNotFvFilename->Clear();
 	return check;
 }
 
@@ -677,7 +888,8 @@ bool PFV::MainForm::PromptForSaving(void)
 }
 void PFV::MainForm::SaveToFile(void)
 {
-	assert(!Globals::vecFvFromImg.empty());
+	if (Globals::vecFvFromImg.empty())
+		return;
 
 	if (!System::String::IsNullOrWhiteSpace(txtFvListOutFilename->Text))
 	{
@@ -707,6 +919,7 @@ void PFV::MainForm::RenameAllFiles(void)
 
 		int counter = 2;
 
+		// add (2), (3), (4)... if file already exists
 		while(std::filesystem::exists(main_fv_dir + L"\\"+ f.new_name + f.GetExtension()))
 			f.new_name += L" (" + std::to_wstring(counter++) + L")";
 
@@ -792,7 +1005,7 @@ void PFV::MainForm::FillInForTests()
 	this->txtCompany->Text = "Caldo";
 	this->txtInvest->Text = "investition-test";
 	this->txtFvIdent->Text = wstrtoustr(L"Fv-123-test"+ Globals::curr_file->old_name);
-	this->txtNetVal->Text = "12";
+	this->txtNetVal->Text = "12+6/2";
 	this->txtGrossVal->Text = "14,76";
 	this->txtDescr->Text = "opis-test";
 	this->txtWhoPayed->Text = "MZ";

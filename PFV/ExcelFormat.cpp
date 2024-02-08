@@ -61,6 +61,7 @@ XLSFormatManager::XLSFormatManager(BasicExcel& xls)
 	_formats[48] = L"##0.0E+0";															// Scientific
 	_formats[49] = XLS_FORMAT_TEXT;			// "@"										// Text
 	_formats[50] = L"# ##0, 00\" z³\"";													// Currency MZ
+	_formats[51] = L"DD.MM.YYYY";														// Date MZ
 
 	 // overwrite formats from workbook
 	size_t maxFormats = xls.workbook_.formats_.size();
