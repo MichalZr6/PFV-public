@@ -431,7 +431,7 @@ struct CellFormat
 
 	void set_xf_idx(int xf_idx)
 	{
-		this->_xf_idx = xf_idx;
+		_xf_idx = xf_idx;
 	}
 
 	void flush()

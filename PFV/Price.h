@@ -19,16 +19,16 @@ public:
 
 	constexpr operator double() const
 	{
-		return this->pd;
+		return pd;
 	}
 
 	bool operator !=(const Price &p) const
 	{
-		return this->ps != p.ps;
+		return ps != p.ps;
 	}
 
 	//constexpr operator int() const
-	//{ return static_cast<int>(this->pd); }
+	//{ return static_cast<int>(pd); }
 
 private:
 	double pd;

@@ -100,25 +100,25 @@ public:
 		old_name(old_n), new_name(new_n), extension(ext) 
 	{
 		if(new_n.empty())
-			this->SetDefaultNewName();
+			SetDefaultNewName();
 	}
 
 	ScannedFile(std::wstring old_n, std::wstring new_n) :
 		old_name(old_n), new_name(new_n)
 	{
 		if (new_n.empty())
-			this->SetDefaultNewName();
-		this->extension = "";
+			SetDefaultNewName();
+		extension = "";
 	}
 	
 	void SetExtension(std::string s)
 	{
-		this->extension = str_tolower(s);
+		extension = str_tolower(s);
 	}
 
 	void SetDefaultNewName() const
 	{
-		this->new_name = L"plik" + std::to_wstring(counter++);
+		new_name = L"plik" + std::to_wstring(counter++);
 	}
 
 	std::wstring GetExtension() const
@@ -128,10 +128,10 @@ public:
 
 	bool operator<(const ScannedFile &f) const 
 	{
-		if (this->old_name == f.old_name || this->new_name == f.new_name)
+		if (old_name == f.old_name || new_name == f.new_name)
 			return false;
 
-		return this->old_name < f.old_name;
+		return old_name < f.old_name;
 
 	}
 

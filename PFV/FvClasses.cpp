@@ -31,7 +31,7 @@ FvList::FvList(const USHORT rows_from_xls_end) : rfe(rows_from_xls_end)
 
 std::string FvList::GetDataFromXlsFile(std::string fv_file_name, const short & rows_from_end)
 {
-	this->file_name = fv_file_name;
+	file_name = fv_file_name;
 	this->rows_from_end = rows_from_end;
 
 	if (!xls->Load(fv_file_name.c_str()))
@@ -73,7 +73,7 @@ std::string FvList::GetDataFromXlsFile(std::string fv_file_name, const short & r
 			temp_info->SetPayment(sheet->Cell(i, COLS::PAYMENT_STATUS)->GetText());
 			temp_info->comments = sheet->Cell(i, COLS::COMMENTS)->GetText();
 			warnings += temp_info->GetWarnings();
-			this->vecOldFvInfo.push_back(std::move(temp_info));
+			vecOldFvInfo.push_back(std::move(temp_info));
 		}
 		catch (std::exception& e)
 		{
@@ -85,7 +85,7 @@ std::string FvList::GetDataFromXlsFile(std::string fv_file_name, const short & r
 
 void FvList::SearchForCompany(std::wstring fname, std::unordered_set<std::wstring> &comp_set)
 {
-	for (auto const &fvFromXls : this->vecOldFvInfo)
+	for (auto const &fvFromXls : vecOldFvInfo)
 	{
 		if (wstr_tolower(fvFromXls->GetCompany()).find(wstr_tolower(fname)) != std::wstring::npos)
 			comp_set.insert(fvFromXls->GetCompany());
@@ -94,7 +94,7 @@ void FvList::SearchForCompany(std::wstring fname, std::unordered_set<std::wstrin
 
 void FvList::SearchInvestition(std::wstring invest, std::unordered_set <std::wstring> &inv_set)
 {
-	for (auto const &fvFromXls : this->vecOldFvInfo)
+	for (auto const &fvFromXls : vecOldFvInfo)
 	{
 		if (wstr_tolower(fvFromXls->GetInvestition()).find(wstr_tolower(invest)) != std::wstring::npos)
 			inv_set.insert(fvFromXls->GetInvestition());
@@ -103,23 +103,23 @@ void FvList::SearchInvestition(std::wstring invest, std::unordered_set <std::wst
 
 std::string FvList::GetLatestDate() const
 {
-	if (this->vecOldFvInfo.empty())
+	if (vecOldFvInfo.empty())
 		return "0";
 	else
-		return this->vecOldFvInfo.front()->GetFvFullDate();
+		return vecOldFvInfo.front()->GetFvFullDate();
 }
 
 std::string FvList::GetOldestDate() const
 {
-	if (this->vecOldFvInfo.empty())
+	if (vecOldFvInfo.empty())
 		return "0";
 	else
-		return this->vecOldFvInfo.back()->GetFvFullDate();
+		return vecOldFvInfo.back()->GetFvFullDate();
 }
 
 size_t FvList::GetSize() const
 {
-	return this->vecOldFvInfo.size();
+	return vecOldFvInfo.size();
 }
 
 void FvList::DrawDateSeparator(USHORT row, const rFvIter &it)
@@ -191,7 +191,7 @@ void FvList::PrepareXLSData(const VecFv_ptr &vecNewFvs)
 	{
 		if ((*it)->GetMonthNumber() && it >= vecOldFvInfo.rend()-rfe)
 		{
-			//sheet_out->Cell(row, DATE_COL)->SetFormat(date_fmt);
+			sheet_out->Cell(row, DATE_COL)->SetFormat(date_fmt);
 			sheet_out->Cell(row, DATE_COL)->SetString((*it)->GetFvFullDate().c_str());
 			sheet_out->Cell(row, INVESTITION)->SetFormat(cf);
 			sheet_out->Cell(row, DESCRIPTION)->SetFormat(cf);
@@ -203,7 +203,7 @@ void FvList::PrepareXLSData(const VecFv_ptr &vecNewFvs)
 			sheet_out->Cell(row, COMPANY)->Set((*it)->GetCompany().c_str());
 			sheet_out->Cell(row, INVESTITION)->Set((*it)->GetInvestition().c_str());
 			sheet_out->Cell(row, DESCRIPTION)->Set((*it)->description.c_str());
-			sheet_out->Cell(row, FV_IDENT)->Set((*it)->GetInvoiceNumber().c_str());
+			sheet_out->Cell(row, FV_IDENT)->Set((L"'" + (*it)->GetInvoiceNumber()).c_str());		// add ' to force excel treat this as plain text (sometimes it gets formatted as date)
 			sheet_out->Cell(row, NETVAL)->Set((*it)->net_value.GetPrice());
 			sheet_out->Cell(row, GROSVAL)->Set((*it)->gross_value.GetPrice());
 			sheet_out->Cell(row, WHO_PAYED)->Set((*it)->GetPayingPerson().c_str());
@@ -247,14 +247,14 @@ bool FvList::SaveToXLSFile(std::string fn, VecFv_ptr &vecNewFvs)
 
 FvInfo::FvInfo(const BasicExcelCell *ident_cell, const BasicExcelCell *comp_cell)
 {
-	this->err_msg = "";
-	this->SetCompanyAndIdent(ident_cell, comp_cell);
+	err_msg = "";
+	SetCompanyAndIdent(ident_cell, comp_cell);
 }
 
 FvInfo::FvInfo()
 {
-	this->invquantity = 1;
-	this->err_msg = "";
+	invquantity = 1;
+	err_msg = "";
 }
 
 FvInfo::FvInfo(const FvInfo & fvdoc)
@@ -271,80 +271,80 @@ FvInfo::FvInfo(FvInfo && fvdoc)
 
 FvInfo::FvInfo(std::string company)
 {
-	this->invquantity = 1;
-	this->err_msg = "";
+	invquantity = 1;
+	err_msg = "";
 	this->company = StringToWString(company);
 }
 
 FvInfo &FvInfo::operator=(const FvInfo &fvdoc)
 {
-	this->company = fvdoc.GetCompany();
-	this->FVident = fvdoc.FVident;
-	this->file = fvdoc.file;
-	this->investition = fvdoc.GetInvestition();
-	this->invquantity = fvdoc.invquantity;
-	this->description = fvdoc.description;
-	this->date = fvdoc.date;
-	this->net_value.SetPrice(fvdoc.net_value.GetPrice());
-	this->gross_value.SetPrice(fvdoc.gross_value.GetPrice());
-	this->whoPayed = fvdoc.whoPayed;
-	this->payment = fvdoc.payment;
-	this->comments = fvdoc.comments;
-	this->err_msg = fvdoc.GetWarnings();
-	this->corrective = fvdoc.isCorrective();
+	company = fvdoc.GetCompany();
+	FVident = fvdoc.FVident;
+	file = fvdoc.file;
+	investition = fvdoc.GetInvestition();
+	invquantity = fvdoc.invquantity;
+	description = fvdoc.description;
+	date = fvdoc.date;
+	net_value.SetPrice(fvdoc.net_value.GetPrice());
+	gross_value.SetPrice(fvdoc.gross_value.GetPrice());
+	whoPayed = fvdoc.whoPayed;
+	payment = fvdoc.payment;
+	comments = fvdoc.comments;
+	err_msg = fvdoc.GetWarnings();
+	corrective = fvdoc.isCorrective();
 	return *this;
 }
 
 FvInfo & FvInfo::operator=(FvInfo && fvdoc)
 {
-	this->company = std::move(fvdoc.GetCompany());
-	this->FVident = std::move(fvdoc.FVident);
-	this->file = std::move(fvdoc.file);
-	this->investition = std::move(fvdoc.GetInvestition());
-	this->invquantity = std::move(fvdoc.invquantity);
-	this->description = std::move(fvdoc.description);
-	this->date = std::move(fvdoc.date);
-	this->net_value.SetPrice(fvdoc.net_value.GetPrice());
-	this->gross_value.SetPrice(fvdoc.gross_value.GetPrice());
-	this->whoPayed = std::move(fvdoc.whoPayed);
-	this->payment = std::move(fvdoc.payment);
-	this->comments = std::move(fvdoc.comments);
-	this->err_msg = std::move(fvdoc.GetWarnings());
-	this->corrective = fvdoc.isCorrective();
+	company = std::move(fvdoc.GetCompany());
+	FVident = std::move(fvdoc.FVident);
+	file = std::move(fvdoc.file);
+	investition = std::move(fvdoc.GetInvestition());
+	invquantity = std::move(fvdoc.invquantity);
+	description = std::move(fvdoc.description);
+	date = std::move(fvdoc.date);
+	net_value.SetPrice(fvdoc.net_value.GetPrice());
+	gross_value.SetPrice(fvdoc.gross_value.GetPrice());
+	whoPayed = std::move(fvdoc.whoPayed);
+	payment = std::move(fvdoc.payment);
+	comments = std::move(fvdoc.comments);
+	err_msg = std::move(fvdoc.GetWarnings());
+	corrective = fvdoc.isCorrective();
 	return *this;
 }
 
 bool FvInfo::operator<(FvInfo & fvdoc)
 {
-	return this->GetDayNumber() < fvdoc.GetDayNumber();
+	return GetDayNumber() < fvdoc.GetDayNumber();
 }
 
 bool FvInfo::operator==(const FvInfo & fvdoc) const
 {
-	return (wstr_tolower(this->company + this->FVident) == wstr_tolower(fvdoc.company + fvdoc.FVident));
+	return (wstr_tolower(company + FVident) == wstr_tolower(fvdoc.company + fvdoc.FVident));
 }
 
 void FvInfo::SetCompanyAndIdent(const BasicExcelCell * ident_cell, const BasicExcelCell * comp_cell)
 {
-	this->invquantity = 0;
+	invquantity = 0;
 	auto val = ident_cell->GetText();
 	if (val.empty())
-		this->err_msg += "Komórka numeru faktury: " + ident_cell->GetRowCol() + " - pusta wartoœæ.\n";
+		err_msg += "Komórka numeru faktury: " + ident_cell->GetRowCol() + " - pusta wartoœæ.\n";
 	else
-		this->FVident = val;
+		FVident = val;
 
 	val = comp_cell->GetText();
 	if (val.empty())
-		this->err_msg += "Komórka nazwy firmy: " + ident_cell->GetRowCol() + " - pusta wartoœæ.\n";
+		err_msg += "Komórka nazwy firmy: " + ident_cell->GetRowCol() + " - pusta wartoœæ.\n";
 	else
-		this->company = val;
+		company = val;
 }
 
 FvInfo &FvInfo::operator-=(const FvInfo &fvdoc)
 {
-	this->net_value.SetPrice(this->net_value.GetPrice() - fvdoc.net_value.GetPrice());
+	net_value.SetPrice(net_value.GetPrice() - fvdoc.net_value.GetPrice());
 
-	this->gross_value.SetPrice(this->gross_value.GetPrice() - fvdoc.gross_value.GetPrice());
+	gross_value.SetPrice(gross_value.GetPrice() - fvdoc.gross_value.GetPrice());
 
 	return *this;
 }
@@ -354,96 +354,96 @@ void FvInfo::SetFile(const ScannedFile *f)
 	if (f->old_name.empty())
 		MessageBox::Show("FvInfo::SetFile(f) -> [f.old_name] is empty");
 
-	this->file = f;
+	file = f;
 }
 
 void FvInfo::SetDescription(const BasicExcelCell *cell)
 {
-	this->description = cell->GetText();
+	description = cell->GetText();
 }
 
 void FvInfo::SetDescription(std::wstring descr)
 {
-	this->description = descr;
+	description = descr;
 }
 
 void FvInfo::SetInvestition(const BasicExcelCell *cell)
 {
 	auto val = cell->GetText();
 	if (val.empty())
-		this->err_msg += "Komórka inwestycji: " + cell->GetRowCol() + " - pusta wartoœæ komórki.\n";
+		err_msg += "Komórka inwestycji: " + cell->GetRowCol() + " - pusta wartoœæ komórki.\n";
 	else
-		this->investition = val;
+		investition = val;
 }
 
 std::string FvInfo::GetFvFullDate() const
 {
-	return this->date.GetFullDate();
+	return date.GetFullDate();
 }
 
 USHORT FvInfo::GetDayNumber() const
 {
-	if (this->date.isValid())
-		return this->date.day;
+	if (date.isValid())
+		return date.day;
 	else
 	{
 		//MessageBox::Show(wstrtoustr(L"W funkcji [GetDayNumber] -> firma [numer faktury] = "
-			//+ this->company +L"["+ this->FVident +L"] nie posiada prawid³owej daty."));
+			//+ company +L"["+ FVident +L"] nie posiada prawid³owej daty."));
 		return 0;
 	}
 }
 
 USHORT FvInfo::GetMonthNumber() const
 {
-	if (this->date.isValid())
-		return this->date.month;
+	if (date.isValid())
+		return date.month;
 	else
 	{
 		//MessageBox::Show(wstrtoustr(L"W funkcji [GetDayNumber] -> firma [numer faktury] = " + 
-			//this->company + L"[" + this->FVident + L"] nie posiada prawid³owej daty, tj:\n") 
-			//+ System::Convert::ToString(this->date.month));
+			//company + L"[" + FVident + L"] nie posiada prawid³owej daty, tj:\n") 
+			//+ System::Convert::ToString(date.month));
 		return 0;
 	}
 }
 
 const ScannedFile* FvInfo::GetFile() const
 {
-	return this->file;
+	return file;
 }
 
 std::wstring FvInfo::GetCompany() const
 {
-	return this->company;
+	return company;
 }
 
 std::wstring FvInfo::GetFvIdent() const
 {
-	return this->FVident;
+	return FVident;
 }
 
 std::wstring FvInfo::GetInvestition() const
 {
-	return this->investition;
+	return investition;
 }
 
 std::string FvInfo::GetPayment() const
 {
-	return this->payment;
+	return payment;
 }
 
 std::string FvInfo::GetPayingPerson() const
 {
-	return this->whoPayed;
+	return whoPayed;
 }
 
 std::wstring FvInfo::GetInvoiceNumber() const
 {
-	return this->FVident;
+	return FVident;
 }
 
 std::string FvInfo::GetWarnings() const
 {
-	return this->err_msg;
+	return err_msg;
 }
 
 bool FvInfo::isCorrective() const
@@ -453,15 +453,20 @@ bool FvInfo::isCorrective() const
 
 void FvInfo::ResetWarnings()
 {
-	this->err_msg = "";
+	err_msg = "";
 }
 
 bool FvInfo::ValidatePaymentFormat(std::string pay)
 {
 	str_toupper(pay);
 	
-	if (pay[0] == 'G' || pay[0] == 'P' || pay[0] == 'T' || pay == "KARTA")
+	if (pay[0] == 'G' || pay[0] == 'P' || pay == "KARTA")
 		return true;
+	else if(pay[0] == 'T')
+	{
+		if(pay.size() > 3)		// ex. T: DD.MM.YYYY, can't be like "T: ", can be like "T: ?"
+			return true;
+	}
 	else
 		return false;
 }
@@ -477,7 +482,7 @@ void FvInfo::IndicateFVisCorrective()
 void FvInfo::SetDate(BasicExcelCell *cell)
 {
 	if (!cell->GetDate().empty())
-		this->date.SetDate(cell->GetDate());
+		date.SetDate(cell->GetDate());
 	else
 	{
 		MessageBox::Show("Komórka cell[row, col] = ["+ cell->GetRow() +", "+ cell->GetCol() 
@@ -501,8 +506,8 @@ void FvInfo::SetPayingPerson(std::string person)
 	if (person.size() > max_whopayed_size)
 		return;
 
-	this->whoPayed = person;
-	str_toupper(this->whoPayed);
+	whoPayed = person;
+	str_toupper(whoPayed);
 }
 
 void FvInfo::SetPayment(std::wstring pay)
@@ -514,18 +519,18 @@ void FvInfo::SetPayment(std::string pay)
 {
 	if (pay.length() > max_payment_size)
 	{
-		this->err_msg += "Pominiêto status p³atnoœci. Napis zbyt d³ugi ["+ pay +"].\n";
+		err_msg += "Pominiêto status p³atnoœci. Napis zbyt d³ugi ["+ pay +"].\n";
 		return;
 	}
 	else if (pay.empty())
 		return;
-	else if (!this->ValidatePaymentFormat(pay))
+	else if (!ValidatePaymentFormat(pay))
 	{
-		this->err_msg += "Nieprawid³owy format statusu p³atnoœci: ["+ pay +"].\n";
+		err_msg += "Nieprawid³owy format statusu p³atnoœci: ["+ pay +"].\n";
 		return;
 	}
 	else
-		this->payment = pay;
+		payment = pay;
 }
 
 void FvInfo::SetTax(std::string tax)
@@ -542,7 +547,7 @@ void FvInfo::SetTax(std::string tax)
 	}
 	catch (...)
 	{
-		this->err_msg += "B³¹d konwersji ci¹gu znaków podatku VAT do liczby";
+		err_msg += "B³¹d konwersji ci¹gu znaków podatku VAT do liczby";
 		return;
 	}
 }
@@ -561,7 +566,7 @@ void FvInfo::SetNetValue(std::string price_str)
 	IndicateFVisCorrective();
 
 	if (gross_value != Price(0) && fabs(gross_value) < fabs(net_value))
-		this->err_msg += "Brutto mniejsze od netto";
+		err_msg += "Brutto mniejsze od netto";
 }
 
 void FvInfo::SetGrossValue(std::string price_str)
@@ -578,12 +583,12 @@ void FvInfo::SetGrossValue(std::string price_str)
 	IndicateFVisCorrective();
 
 	if (net_value != Price(0) && fabs(gross_value) < fabs(net_value))
-		this->err_msg += "Brutto mniejsze od netto";
+		err_msg += "Brutto mniejsze od netto";
 }
 
 void FvInfo::SetFvIdent(std::wstring fv_nr)
 {
-	this->FVident = fv_nr;
+	FVident = fv_nr;
 }
 
 void FvInfo::SetCompany(std::wstring comp_name)
@@ -591,7 +596,7 @@ void FvInfo::SetCompany(std::wstring comp_name)
 	if (comp_name.empty())
 		MessageBox::Show("FvInfo::SetCompany val passed is empty");
 
-	this->company = comp_name;
+	company = comp_name;
 }
 
 void FvInfo::SetInvestition(std::wstring inv)
@@ -599,7 +604,7 @@ void FvInfo::SetInvestition(std::wstring inv)
 	if (inv.empty())
 		MessageBox::Show("FvInfo::SetInvestition val passed is empty");
 
-	this->investition = inv;
+	investition = inv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -610,24 +615,24 @@ void FvInfo::SetInvestition(std::wstring inv)
 
 DateStruct::DateStruct()
 {
-	this->day = 0;
-	this->month = 0;
-	this->year = 0;
+	day = 0;
+	month = 0;
+	year = 0;
 }
 
 DateStruct::DateStruct(std::string d, char delim)
 {
-	this->SetDate(d, delim);
+	SetDate(d, delim);
 }
 
 DateStruct::DateStruct(unsigned short d, unsigned short m, unsigned short y)
 {
-	this->SetDate(d, m, y);
+	SetDate(d, m, y);
 }
 
 bool DateStruct::isValid() const
 {
-	if (this->day && this->month && this->year)
+	if (day && month && year)
 		return true;
 	else
 		return false;
@@ -639,15 +644,15 @@ std::string DateStruct::GetFullDate(char delim) const
 	if (!isValid())
 		return "";
 
-	if (convert::string_cast(this->day).size() == 1)
+	if (convert::string_cast(day).size() == 1)
 		ret_val += "0";
-	ret_val += convert::string_cast(this->day);
+	ret_val += convert::string_cast(day);
 	ret_val += delim;
-	if (convert::string_cast(this->month).size() == 1)
+	if (convert::string_cast(month).size() == 1)
 		ret_val += "0";
-	ret_val += convert::string_cast(this->month);
+	ret_val += convert::string_cast(month);
 	ret_val += delim;
-	ret_val += convert::string_cast(this->year);
+	ret_val += convert::string_cast(year);
 
 	return ret_val;
 }
@@ -657,30 +662,30 @@ void DateStruct::SetDate(std::string d, char delim)
 	std::regex reg("^([0-9]|0[1-9]|[12][0-9]|3[01])[.](0[1-9]|1[012])[.](20)\\d\\d$");
 	if (!std::regex_match(d, reg))
 	{
-		this->day = 0;
+		day = 0;
 		return;
 	}
 
 	if (d.empty())
 	{
-		this->day = 0;
-		this->month = 0;
-		this->year = 0;
+		day = 0;
+		month = 0;
+		year = 0;
 		return;
 	}
 
 	if (!is_number(d.substr(0, 1)) && d.size() != 10 && d.find(delim) != 2 && d.find_last_of(delim) != 5)
 	{
-		this->day = 0;
-		this->month = 0;
-		this->year = 0;
+		day = 0;
+		month = 0;
+		year = 0;
 		return;
 	}
 	else /// DD.MM.YYYY
 	{
-		this->day = convert::numeric_cast<USHORT>(d.substr(0, 2).c_str());
-		this->month = convert::numeric_cast<USHORT>(d.substr(3, 2).c_str());
-		this->year = convert::numeric_cast<USHORT>(d.substr(6, 4).c_str());
+		day = convert::numeric_cast<USHORT>(d.substr(0, 2).c_str());
+		month = convert::numeric_cast<USHORT>(d.substr(3, 2).c_str());
+		year = convert::numeric_cast<USHORT>(d.substr(6, 4).c_str());
 	}
 }
 
@@ -688,15 +693,15 @@ void DateStruct::SetDate(unsigned short d, unsigned short m, unsigned short y)
 {
 	if (d <= 0 || d >= 32 || m <= 0 || m >= 13 || y <= 2000 || y >= 2050)
 	{
-		this->day = 0;
-		this->month = 0;
-		this->year = 0;
+		day = 0;
+		month = 0;
+		year = 0;
 	}
 	else
 	{
-		this->day = d;
-		this->month = m;
-		this->year = y;
+		day = d;
+		month = m;
+		year = y;
 	}
 }
 

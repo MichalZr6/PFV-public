@@ -2,33 +2,33 @@
 
 Price::Price()
 {
-	this->pd = 0.0;
-	this->ps = "";
+	pd = 0.0;
+	ps = "";
 }
 
 Price::Price(const std::string &p_str)
 {
-	this->SetPrice(p_str);
+	SetPrice(p_str);
 }
 
 Price::Price(const double &p)
 {
-	this->SetPrice(p);
+	SetPrice(p);
 }
 
 double Price::GetPrice() const
 {
-	return this->pd;
+	return pd;
 }
 
 std::string Price::GetPriceStr() const
 {
-	return this->ps;
+	return ps;
 }
 
 std::string Price::GetPriceStrCurr() const
 {
-	return this->ps + " z³";
+	return ps + " z³";
 }
 
 void Price::SetPrice(const std::string &p_str)
@@ -43,9 +43,9 @@ void Price::SetPrice(const std::string &p_str)
 	{
 		auto expr = std::make_unique<SimplExpr>(p_str);
 
-		this->pd = expr->getValue();
-		this->ps = convert::string_cast<double>(pd, 2, convert::thou_sep);
-		addZeros(this->ps);
+		pd = expr->getValue();
+		ps = convert::string_cast<double>(pd, 2, convert::thou_sep);
+		addZeros(ps);
 	}
 	catch (std::exception &e)
 	{
@@ -60,9 +60,9 @@ void Price::SetPrice(const double &p)
 		*this = Price();
 		return;
 	}
-	this->pd = p;
-	this->ps = convert::string_cast<double>(p, 2, convert::thou_sep);
-	addZeros(this->ps);
+	pd = p;
+	ps = convert::string_cast<double>(p, 2, convert::thou_sep);
+	addZeros(ps);
 }
 
 

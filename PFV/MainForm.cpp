@@ -1,4 +1,4 @@
-#include "MainForm.h"
+	#include "MainForm.h"
 
 #include <regex>
 
@@ -24,26 +24,26 @@ void PFV::MainForm::btnAdd_Click(System::Object ^ sender, System::EventArgs ^ e)
 {
 	if (Globals::files.empty())
 	{
-		this->AskForPath();
+		AskForPath();
 		return;
 	}
 
 	if (Globals::curr_file == Globals::files.cend())
 	{
-		this->CheckActFile();
+		CheckActFile();
 		return;
 	}
 
 	if (chbAnotherPage->Checked && Globals::curr_file != Globals::files.begin())				// the file is another page of previously added one
-		this->AnotherPageAdd();
+		AnotherPageAdd();
 	else
 	{
 		bool is_valid;
 
-		if (this->chbIsFv->Checked)
-			is_valid = this->NewFvAdd();
+		if (chbIsFv->Checked)
+			is_valid = NewFvAdd();
 		else
-			is_valid = this->NewNonFvAdd();
+			is_valid = NewNonFvAdd();
 
 		if (!is_valid)
 			return;
@@ -51,7 +51,7 @@ void PFV::MainForm::btnAdd_Click(System::Object ^ sender, System::EventArgs ^ e)
 	auto ptr = Globals::curr_file;
 	Globals::curr_file++;
 	ptr = Globals::curr_file;
-	this->CheckActFile();
+	CheckActFile();
 	chbIsFv_CheckedChanged(sender, e);
 }
 void PFV::MainForm::btnSplit_Click(System::Object^  sender, System::EventArgs^  e)
@@ -59,10 +59,10 @@ void PFV::MainForm::btnSplit_Click(System::Object^  sender, System::EventArgs^  
 	if (Globals::vecFvFromImg.size() > 0)
 	{
 		split_fv_form = gcnew ProjektFaktury::SplitFvForm();
-		this->Hide();
+		Hide();
 		split_fv_form->ShowDialog();
-		this->Show();
-		this->ManageForm(FormState::ADDING_DELETING);
+		Show();
+		ManageForm(FormState::ADDING_DELETING);
 	}
 	else
 		MessageBox::Show("Brak dodanych faktur");
@@ -71,15 +71,15 @@ void PFV::MainForm::btnSplit_Click(System::Object^  sender, System::EventArgs^  
 void PFV::MainForm::MainForm_Load(System::Object^ sender, System::EventArgs^ e)
 {
 
-	this->LoadRawFiles();
-	this->SetCurrYearMon();
+	LoadRawFiles();
+	SetCurrYearMon();
 
 	if(Globals::files.empty())
 		ManageForm(FormState::NO_FILES_LOADED);
 	else
 	{
 		Globals::curr_file = Globals::files.cbegin();
-		this->LoadXLSRecords();
+		LoadXLSRecords();
 		TryRecognizeCurrFile();
 		ManageForm(FormState::STARTING);
 	}
@@ -122,17 +122,17 @@ void PFV::MainForm::txtInvest_TextChanged(System::Object ^ sender, System::Event
 
 	if (txtInvest->Text->Length > TEXT_LEN_SHOW_ACTIVATE)
 	{
-		std::unordered_set<std::wstring> inv_set;
+		std::unordered_set<std::wstring> searchResult;
 		auto const search_string{ ustrtowstr(txtInvest->Text->ToString()) };
 
-		Globals::fv_list.SearchInvestition(search_string, inv_set);		// search in records from XLS file
-		Globals::SearchInvestition(search_string, inv_set);				// search in already added invoices
+		Globals::fv_list.SearchInvestition(search_string, searchResult);		// search in records from XLS file
+		Globals::SearchInvestition(search_string, searchResult);				// search in already added invoices
 																		// function appends any matching records
-		if (inv_set.size() > 0)
+		if (searchResult.size() > 0)
 		{
 			rtxtDynamicOutput->Visible = true;
 			rtxtDynamicOutput->Text = "Wybierz z klawiatury nr inwestycji:\n";
-			StringsToOutput(search_string, inv_set);
+			StringsToOutput(search_string, searchResult);
 		}
 		else rtxtDynamicOutput->Visible = false;
 	}
@@ -159,15 +159,15 @@ void PFV::MainForm::btnDeleteLast_Click(System::Object^  sender, System::EventAr
 	}
 
 	ManageForm(FormState::ADDING_DELETING);
-	this->ResetFilenameLabel();
-	this->CheckActFile();
+	ResetFilenameLabel();
+	CheckActFile();
 }
 void PFV::MainForm::btnSaldeo_Click(System::Object^  sender, System::EventArgs^  e)
 {
 	for (auto &fv : Globals::fv_list.vecOldFvInfo)
 	{
-		if (fv->date.month == System::Convert::ToInt16(this->txtMonth->Text)
-			&& fv->date.year == System::Convert::ToInt16(this->txtYear->Text))
+		if (fv->date.month == System::Convert::ToInt16(txtMonth->Text)
+			&& fv->date.year == System::Convert::ToInt16(txtYear->Text))
 		{
 			rtxtProgramOutput->Text += "new FvInfo(\""
 				+ wstrtoustr(erase_strange_chars(fv->GetCompany() + fv->GetInvoiceNumber()) + L"\", "
@@ -190,16 +190,16 @@ void PFV::MainForm::lblCurrentFile_MouseHover(System::Object^  sender, System::E
 {
 	if (Globals::curr_file == Globals::files.cend()) return ;
 	
-	this->InitOnMouseHoverTextBox();
+	InitOnMouseHoverTextBox();
 	size_t s{ Globals::curr_file->old_name.size() };
 	System::Drawing::Point ^p = System::Windows::Forms::Control::MousePosition;
-	this->rtxtOnMouseHover->Location = 
-		this->panelFilename->PointToClient(System::Drawing::Point(p->X+20, p->Y+100));
-	this->rtxtOnMouseHover->Size = System::Drawing::Size(
+	rtxtOnMouseHover->Location = 
+		panelFilename->PointToClient(System::Drawing::Point(p->X+20, p->Y+100));
+	rtxtOnMouseHover->Size = System::Drawing::Size(
 		static_cast<int>(s*5.5), 15);
-	this->rtxtOnMouseHover->Text = wstrtoustr(Globals::curr_file->old_name);
-	this->rtxtOnMouseHover->Visible = true;
-	this->rtxtOnMouseHover->BringToFront();
+	rtxtOnMouseHover->Text = wstrtoustr(Globals::curr_file->old_name);
+	rtxtOnMouseHover->Visible = true;
+	rtxtOnMouseHover->BringToFront();
 }
 
 //////////////////////////////////// FORM CONTROLS FUNCTIONS ///////////////////////////////////////
@@ -208,19 +208,19 @@ void PFV::MainForm::lblCurrentFile_MouseHover(System::Object^  sender, System::E
 
 void PFV::MainForm::InitDynamicOutputBox()
 {
-	if (this->Controls->Find(L"rtxtDynamicOutput", true)->Length)
+	if (Controls->Find(L"rtxtDynamicOutput", true)->Length)
 		return;
-	this->rtxtDynamicOutput = (gcnew System::Windows::Forms::RichTextBox());
-	this->rtxtDynamicOutput->Name = L"rtxtDynamicOutput";
-	this->rtxtDynamicOutput->ReadOnly = true;
-	this->rtxtDynamicOutput->ScrollBars = 
+	rtxtDynamicOutput = (gcnew System::Windows::Forms::RichTextBox());
+	rtxtDynamicOutput->Name = L"rtxtDynamicOutput";
+	rtxtDynamicOutput->ReadOnly = true;
+	rtxtDynamicOutput->ScrollBars = 
 		System::Windows::Forms::RichTextBoxScrollBars::None;
-	this->rtxtDynamicOutput->Size = 
+	rtxtDynamicOutput->Size = 
 		System::Drawing::Size(txtCompany->Width, (MAX_DYNAMIC_SHOW+1)*15);
-	this->rtxtDynamicOutput->TabStop = false;
-	this->rtxtDynamicOutput->Text = L"";
-	this->rtxtDynamicOutput->Visible = false;
-	this->Controls->Add(this->rtxtDynamicOutput);
+	rtxtDynamicOutput->TabStop = false;
+	rtxtDynamicOutput->Text = L"";
+	rtxtDynamicOutput->Visible = false;
+	Controls->Add(rtxtDynamicOutput);
 
 }
 void PFV::MainForm::StringsToOutput(const std::wstring &search, 
@@ -238,47 +238,53 @@ void PFV::MainForm::StringsToOutput(const std::wstring &search,
 		i++;
 	}
 }
-void PFV::MainForm::PrevCompInvKeyDown(System::Object ^ sender, 
+void PFV::MainForm::PrevCompInvKeyDown(System::Object ^ sender,
 	System::Windows::Forms::PreviewKeyDownEventArgs ^ e)
 {
-	assert(sender->GetType()->Name == "TextBox");
-	auto tbox{ static_cast<System::Windows::Forms::TextBox^>(sender) };
+	auto tbox = dynamic_cast<System::Windows::Forms::TextBox ^>(sender);
+	if(!tbox) return;
 
-	rtxtDynamicOutput->Location = 
-		tbox->FindForm()->PointToClient(tbox->Parent->PointToScreen(
-		System::Drawing::Point(tbox->Location.X, tbox->Location.Y+tbox->Height)));
-
+	rtxtDynamicOutput->Location = tbox->FindForm()->PointToClient(
+		tbox->PointToScreen(System::Drawing::Point(0, tbox->Height)));
 	rtxtDynamicOutput->BringToFront();
+
+	// Handle backspace (reset auto-selection)
+	if(e->KeyCode == Keys::Back)
+	{
+		userSelectionMade = false;
+		rtxtDynamicOutput->Visible = false;
+		return;
+	}
 
 	int number = static_cast<int>(e->KeyCode) - 48;
 
-	if (e->KeyCode >= Keys::D1 && e->KeyCode <= Keys::D9
+	if(e->KeyCode >= Keys::D1 && e->KeyCode <= Keys::D9
 		&& number <= MAX_DYNAMIC_SHOW
 		&& Globals::currShown.size() != 0
-			&& tbox->Text->Length > TEXT_LEN_SHOW_ACTIVATE)
-	{
-		rtxtDynamicOutput->Visible = false;
-		if (Globals::currShown.count(number) == 0)
-		{
-			this->numberKeyPressed = false;
-			return;
-		}
-		tbox->Text = wstrtoustr(Globals::currShown[number]);
-		this->numberKeyPressed = true;
-		System::Windows::Forms::Control::SelectNextControl(tbox, true, true, true, true);
-	}
-	else if (e->KeyCode == Keys::Tab
-		&& Globals::currShown.size() != 0
+		&& rtxtDynamicOutput->Visible
 		&& tbox->Text->Length > TEXT_LEN_SHOW_ACTIVATE)
 	{
+		rtxtDynamicOutput->Visible = false;
+		tbox->Text = wstrtoustr(Globals::currShown[number]);
+		userSelectionMade = true;
+		System::Windows::Forms::Control::SelectNextControl(tbox, true, true, true, true);
+	}
+	else if(e->KeyCode == Keys::Tab
+		&& !Globals::currShown.empty()
+		&& rtxtDynamicOutput->Visible
+		&& tbox->Text->Length > TEXT_LEN_SHOW_ACTIVATE
+		&& !userSelectionMade) // Prevent override if invoice recognition was used
+	{
 		tbox->Text = wstrtoustr(Globals::currShown[1]);
-		this->numberKeyPressed = true;
+		userSelectionMade = true;
 		rtxtDynamicOutput->Visible = false;
 	}
 	else
-		this->numberKeyPressed = false;
-
+	{
+		userSelectionMade = false;
+	}
 }
+
 std::wstring PFV::MainForm::GetFvDirText()
 {
 	auto main_fv_dir = ustrtowstr(txtFvDir->Text);
@@ -316,7 +322,7 @@ void PFV::MainForm::LoadRawFiles(void)
 }
 void PFV::MainForm::AskForPath(void)
 {
-	this->folderBrowser->ShowDialog();
+	folderBrowser->ShowDialog();
 	if(!System::String::IsNullOrEmpty(folderBrowser->SelectedPath))
 		MessageBox::Show("Wskazany folder to: "+ folderBrowser->SelectedPath 
 			+"\n\nTa funkcja nie jest jeszcze dostêpna...");
@@ -338,42 +344,42 @@ void PFV::MainForm::ManageForm(FormState state)
 		&& state != FormState::AFTER_SAVING)
 		state = FormState::NO_MORE_LEFT;
 
-	this->btnSplit->Enabled = false;
-	this->btnDeleteLast->Enabled = false;
-	this->panelFilename->Visible = false;
+	btnSplit->Enabled = false;
+	btnDeleteLast->Enabled = false;
+	panelFilename->Visible = false;
 
-	this->UpdateProgramOutput(state);
+	UpdateProgramOutput(state);
 
 	switch (state)
 	{
 	case NO_FILES_LOADED:
-		this->btnAdd->Text = "Wczytaj z pliku";
-		this->HideFvComponents();
+		btnAdd->Text = "Wczytaj z pliku";
+		HideFvComponents();
 		break;
 	case NO_MORE_LEFT:
-		this->btnAdd->Text = "Zapisz";
-		this->btnDeleteLast->Enabled = true;
-		this->btnSplit->Enabled = this->CanSplitBtnBeEnabled(Globals::curr_file);
+		btnAdd->Text = "Zapisz";
+		btnDeleteLast->Enabled = true;
+		btnSplit->Enabled = CanSplitBtnBeEnabled(Globals::curr_file);
 		break;
 	case STARTING:
-		this->panelFilename->Visible = true;
-		this->chbAnotherPage->Visible = false;
-		this->btnAdd->Text = "Dodaj";
-		this->ResetFilenameLabel();
+		panelFilename->Visible = true;
+		chbAnotherPage->Visible = false;
+		btnAdd->Text = "Dodaj";
+		ResetFilenameLabel();
 		break;
 	case ADDING_DELETING:
-		this->panelFilename->Visible = true;
-		this->chbAnotherPage->Visible = true;
-		this->btnAdd->Text = "Dodaj";
-		this->ClearAllInputs();
-		this->chbIsFv->Focus();
-		this->btnSplit->Enabled = this->CanSplitBtnBeEnabled(Globals::curr_file);
-		this->btnDeleteLast->Enabled = true;
-		this->ResetFilenameLabel();
+		panelFilename->Visible = true;
+		chbAnotherPage->Visible = true;
+		btnAdd->Text = "Dodaj";
+		ClearAllInputs();
+		chbIsFv->Focus();
+		btnSplit->Enabled = CanSplitBtnBeEnabled(Globals::curr_file);
+		btnDeleteLast->Enabled = true;
+		ResetFilenameLabel();
 		break;
 	case AFTER_SAVING:
-		this->btnAdd->Enabled = false;
-		this->ClearAllInputs();
+		btnAdd->Enabled = false;
+		ClearAllInputs();
 		break;
 	default:
 		// for debugging only
@@ -385,13 +391,13 @@ void PFV::MainForm::CheckActFile(void)
 	if (Globals::curr_file == Globals::files.cend())
 	{
 		ManageForm(FormState::NO_MORE_LEFT);
-		if (this->PromptForSaving())
+		if (PromptForSaving())
 		{
 			try 
 			{
-				this->SaveToFile();
-				this->RenameAllFiles();
-				this->CreateFoldersAndMoveFiles();
+				SaveToFile();
+				RenameAllFiles();
+				CreateFoldersAndMoveFiles();
 			}
 			catch (std::string &err)
 			{
@@ -415,7 +421,7 @@ void PFV::MainForm::CheckActFile(void)
 	}
 	else
 	{
-		this->ManageForm(FormState::ADDING_DELETING);
+		ManageForm(FormState::ADDING_DELETING);
 		TryRecognizeCurrFile();
 	}
 }
@@ -440,8 +446,7 @@ void PFV::MainForm::SetFvInfoFromInputs(Fv_ptr & fv)
 
 	fv->SetFvIdent(ustrtowstr(txtFvIdent->Text));
 
-	fv->SetPayingPerson(ustrtostr(txtWhoPayed->Text));
-	fv->SetPayment(ustrtostr(txtPayment->Text));
+	fv->SetPayment(str_toupper(ustrtostr(txtPayment->Text)));
 	fv->SetTax(ustrtostr(cbTax->Text));
 	fv->SetNetValue(ustrtostr(txtNetVal->Text));
 	fv->SetGrossValue(ustrtostr(txtGrossVal->Text));
@@ -487,8 +492,8 @@ void PFV::MainForm::SetFvInfoFromInputs(Fv_ptr & fv)
 void PFV::MainForm::SetCurrYearMon(void)
 {
 	System::DateTime now = System::DateTime::Now;
-	this->txtYear->Text = System::Convert::ToString(now.Year);
-	this->txtMonth->Text = System::Convert::ToString(now.Month);
+	txtYear->Text = System::Convert::ToString(now.Year);
+	txtMonth->Text = System::Convert::ToString(now.Month);
 }
 void PFV::MainForm::ClearAllInputs(void)
 {
@@ -535,7 +540,7 @@ bool PFV::MainForm::CanSplitBtnBeEnabled
 void PFV::MainForm::UpdateProgramOutput(FormState state)
 {
 	if(state != FormState::AFTER_SAVING)
-		this->rtxtProgramOutput->Clear();
+		rtxtProgramOutput->Clear();
 
 	switch (state)
 	{
@@ -543,24 +548,24 @@ void PFV::MainForm::UpdateProgramOutput(FormState state)
 		rtxtProgramOutput->Text = "Brak plików w folderze: " + txtFvDir->Text;
 		break;
 	case FormState::STARTING:
-		this->SummaryFromXLS_ToOutput();
-		this->rtxtProgramOutput->AppendText("Uwagi:\n"+ this->warnings + "\n");
-		this->RawFilenames_ToOutput();
+		SummaryFromXLS_ToOutput();
+		rtxtProgramOutput->AppendText("Uwagi:\n"+ warnings + "\n");
+		RawFilenames_ToOutput();
 		break;
 	case FormState::ADDING_DELETING:
-		this->FvFiles_ToOutput();
+		FvFiles_ToOutput();
 		break;
 	case FormState::NO_MORE_LEFT:
-		this->FvFiles_ToOutput();
-		this->rtxtProgramOutput->AppendText("\nWczytano wszystkie dostêpne pliki z folderu: " + txtFvDir->Text);
+		FvFiles_ToOutput();
+		rtxtProgramOutput->AppendText("\nWczytano wszystkie dostêpne pliki z folderu: " + txtFvDir->Text);
 		break;
 	case FormState::AFTER_SAVING:
-		this->rtxtProgramOutput->AppendText("\n\nZapisano do pliku i zmieniono nazwy skanów");
+		rtxtProgramOutput->AppendText("\n\nZapisano do pliku i zmieniono nazwy skanów");
 		break;
 	default:
 		break;
 	}
-	this->rtxtProgramOutput->ScrollToCaret();
+	rtxtProgramOutput->ScrollToCaret();
 }
 void PFV::MainForm::RawFilenames_ToOutput(void)
 {
@@ -603,8 +608,8 @@ bool PFV::MainForm::NewFvAdd(void)
 		
 	try
 	{
-		this->SetFvInfoFromInputs(newFvDoc);
-		this->CheckForDuplicates(newFvDoc);
+		SetFvInfoFromInputs(newFvDoc);
+		CheckForDuplicates(newFvDoc);
 	}
 	catch (System::Exception ^e)
 	{
@@ -643,20 +648,29 @@ void PFV::MainForm::CheckForDuplicates(const Fv_ptr &fv)
 void PFV::MainForm::TryRecognizeCurrFile()
 {
 	// TODO: iterate these functions in a loop... through map<company, regex>
-	// check if there are no dbl matches
-	TryRecoAutopayInvoice(L"([0-9])+(202[0-9])(APT)\\.pdf");
-	TryRecoVTSInvoice(L"(CP([0-9]{3})([0-9]{2}).*)\\.pdf");		// ex. CP02302I0494, CP02303I0286
-	TryRecoOrangeInvoice(L"(FAKTURA-P-[0-9]*-[0-9]*-[0-9]*)\\.pdf");		// ex. FAKTURA-P-16899138-2669260577-00001763
-	TryRecoIglotechInvoice(L".*FS-KAT_([0-9]+)_([0-9]{2})_([0-9]{4})_[0-9]{6}([0-9]{2}).*\\.pdf");	// ex. (S)FS-KAT_175_09_2023_20230918_1201 Strzelecka
-	TryRecoNaviInvoice(L".*NAVI_([0-9]+)_([0-9]{2})_([0-9]{4}).*\\.pdf");
-	TryRecoTCHWInvoice(L".*FV_([0-9]+)_([0-9]{2})_([0-9]{4}).*\\.PDF");
-	TryRecoWienkraInvoice(L".*Dok_FV-([0-9]+)-([0-9]+).*\\.pdf");
+	// provide no duplicates
+	userSelectionMade = false;
+	userSelectionMade |= TryRecoAutopayInvoice(L".*([0-9])+(202[0-9])(APT).*");
+	userSelectionMade |= TryRecoVTSInvoice(L".*(CP([0-9]{3})([0-9]{2}).*).*");		// ex. CP02302I0494, CP02303I0286
+	userSelectionMade |= TryRecoOrangeInvoice(L".*(FAKTURA-P-[0-9]*-[0-9]*-[0-9]*).*");		// ex. FAKTURA-P-16899138-2669260577-00001763
+	userSelectionMade |= TryRecoIglotechInvoice(L".*FS-KAT_([0-9]+)_([0-9]{2})_([0-9]{4})_[0-9]{6}([0-9]{2}).*");	// ex. (S)FS-KAT_175_09_2023_20230918_1201 Strzelecka
+	userSelectionMade |= TryRecoNaviInvoice(L".*NAVI-([0-9]+)-([0-9]{2})-([0-9]{4}).*");
+	userSelectionMade |= TryRecoTCHWInvoice(L".*FV_([0-9]+)_([0-9]{2})_([0-9]{4}).*");
+	userSelectionMade |= TryRecoWienkraInvoice(L".*Dok_FV-([0-9]+)-([0-9]+).*");
+	userSelectionMade |= TryRecoSGKlimaInvoice(L".*dokument_FS_([0-9]+)_([0-9]{2})_([0-9]{4}).*");
+	userSelectionMade |= TryRecoHerbudInvoice(L".*FS_([0-9]+)_([A-Z][0-9])_([0-9]{2})_([0-9]{4}).*");
+	userSelectionMade |= TryRecoWimarInvoice(L".*FVS_([0-9]+)_([0-9]{2})_([0-9]{4}).*(Wzór_standard).*");
+	userSelectionMade |= TryRecoOpenAIInvoice(L".*Invoice-(40DD5268-[0-9]{4}).*");
+	userSelectionMade |= TryRecoSzydloInvoice(L".*faktura_([0-9]{2})_([0-9]{2})_([0-9]{4}).*");
+
+	if(userSelectionMade)
+		rtxtDynamicOutput->Visible = false;
 }
 void PFV::MainForm::txtDateSameAsFileLastModDate()
 {
-	this->txtDay->Text = strtoustr(std::to_string(Globals::curr_file->last_mod.day));
-	this->txtMonth->Text = strtoustr(std::to_string(Globals::curr_file->last_mod.month));
-	this->txtYear->Text = strtoustr(std::to_string(Globals::curr_file->last_mod.year));
+	txtDay->Text = strtoustr(std::to_string(Globals::curr_file->last_mod.day));
+	txtMonth->Text = strtoustr(std::to_string(Globals::curr_file->last_mod.month));
+	txtYear->Text = strtoustr(std::to_string(Globals::curr_file->last_mod.year));
 }
 bool PFV::MainForm::TryRecoAutopayInvoice(std::wstring rx_pattern)
 {
@@ -666,19 +680,19 @@ bool PFV::MainForm::TryRecoAutopayInvoice(std::wstring rx_pattern)
 
 	if (std::regex_match(f->old_name, sm, reg))
 	{
-		this->txtCompany->Text = "Autopay";
-		this->txtInvest->Text = "";
-		this->txtFvIdent->Text = wstrtoustr(f->old_name.substr(0, 4)
+		txtCompany->Text = "Autopay";
+		txtInvest->Text = "";
+		txtFvIdent->Text = wstrtoustr(f->old_name.substr(0, 4)
 			+ L"/" + std::to_wstring(f->last_mod.month)
 			+ L"/" + std::to_wstring(f->last_mod.year)
 			+ L"/APT");
-		this->txtNetVal->Text = "10,57";
-		this->txtGrossVal->Text = "13,00";
-		this->txtDescr->Text = "A4";
-		this->txtWhoPayed->Text = "MZ";
-		this->txtPayment->Text = "G";
+		txtNetVal->Text = "10,57";
+		txtGrossVal->Text = "13,00";
+		txtDescr->Text = "A4";
+		txtWhoPayed->Text = "MZ";
+		txtPayment->Text = "G";
 		txtDateSameAsFileLastModDate();
-		this->txtFvIdent->Focus();
+		txtFvIdent->Focus();
 		return true;
 	}
 	return false;
@@ -692,16 +706,16 @@ bool PFV::MainForm::TryRecoVTSInvoice(std::wstring rx_pattern)
 
 	if (std::regex_match(f->old_name, sm, reg))
 	{
-		this->txtCompany->Text = "VTS Polska";
-		this->txtInvest->Text = "";
-		this->txtFvIdent->Text = wstrtoustr(sm[1]);
-		this->txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
-		this->txtMonth->Text = wstrtoustr(sm[3]);
-		this->txtYear->Text = L"2"+ wstrtoustr(sm[2]);
-		this->cbTax->Text = "23";
-		this->txtPayment->Text = "T: ";
+		txtCompany->Text = "VTS Polska";
+		txtInvest->Text = "";
+		txtFvIdent->Text = wstrtoustr(sm[1]);
+		txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		txtMonth->Text = wstrtoustr(sm[3]);
+		txtYear->Text = L"2"+ wstrtoustr(sm[2]);
+		cbTax->Text = "23";
+		txtPayment->Text = "T: ";
 
-		this->txtInvest->Focus();
+		txtInvest->Focus();
 		return true;
 	}
 	return false;
@@ -715,11 +729,12 @@ bool PFV::MainForm::TryRecoOrangeInvoice(std::wstring rx_pattern)
 
 	if (std::regex_match(f->old_name, sm, reg))
 	{
-		this->txtCompany->Text = "Orange";
-		this->txtInvest->Text = "miesiêczne koszty firmy";
-		this->txtFvIdent->Text = wstrtoustr(sm[1]);
-		this->cbTax->Text = "23";
-		this->txtPayment->Text = "T: ";
+		txtCompany->Text = "Orange";
+		txtInvest->Text = "miesiêczne koszty firmy";
+		txtDescr->Text = "abon. tel.";
+		txtFvIdent->Text = wstrtoustr(sm[1]);
+		cbTax->Text = "23";
+		txtPayment->Text = "T: ";
 		txtDateSameAsFileLastModDate();
 
 		return true;
@@ -735,16 +750,14 @@ bool PFV::MainForm::TryRecoIglotechInvoice(std::wstring rx_pattern)
 
 	if (std::regex_match(f->old_name, sm, reg))
 	{
-		this->txtCompany->Text = "Iglotech";
-		this->txtFvIdent->Text = wstrtoustr(L"SFS-KAT-"+ sm[1].str() +L"-"+ sm[2].str() +L"-"+ 
+		txtCompany->Text = "Iglotech";
+		txtFvIdent->Text = wstrtoustr(L"SFS-KAT/"+ sm[1].str() +L"/"+ sm[2].str() +L"/"+ 
 											sm[3].str());
-		this->txtDay->Text = wstrtoustr(sm[4]);
-		this->txtMonth->Text = wstrtoustr(sm[2]);
-		this->txtYear->Text = wstrtoustr(sm[3]);
-		this->cbTax->Text = "23";
-		this->txtPayment->Text = "T: ";
-
-		this->txtInvest->Focus();
+		txtDay->Text = wstrtoustr(sm[4]);
+		txtMonth->Text = wstrtoustr(sm[2]);
+		txtYear->Text = wstrtoustr(sm[3]);
+		cbTax->Text = "23";
+		txtPayment->Text = "T: ";
 
 		return true;
 	}
@@ -759,19 +772,19 @@ bool PFV::MainForm::TryRecoNaviInvoice(std::wstring rx_pattern)
 
 	if (std::regex_match(f->old_name, sm, reg))
 	{
-		this->txtCompany->Text = "Navifleet";
-		this->txtFvIdent->Text = wstrtoustr(L"NAVI-" + sm[1].str() + L"-" + sm[2].str() + L"-" +
+		txtCompany->Text = "Navifleet";
+		txtFvIdent->Text = wstrtoustr(L"NAVI-" + sm[1].str() + L"-" + sm[2].str() + L"-" +
 			sm[3].str());
-		this->txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
-		this->txtMonth->Text = wstrtoustr(sm[2]);
-		this->txtYear->Text = wstrtoustr(sm[3]);
+		txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		txtMonth->Text = wstrtoustr(sm[2]);
+		txtYear->Text = wstrtoustr(sm[3]);
 
-		this->txtInvest->Text = strtoustr("miesiêczne koszty firmy");
-		this->txtDescr->Text = strtoustr("gps");
-		this->txtNetVal->Text = strtoustr("66");
-		this->txtGrossVal->Text = strtoustr("81,18");
-		this->cbTax->Text = "23";
-		this->txtPayment->Text = "T: ";
+		txtInvest->Text = strtoustr("miesiêczne koszty firmy");
+		txtDescr->Text = strtoustr("gps");
+		txtNetVal->Text = strtoustr("66,00");
+		txtGrossVal->Text = strtoustr("81,18");
+		cbTax->Text = "23";
+		txtPayment->Text = "T: ";
 
 		return true;
 	}
@@ -786,14 +799,14 @@ bool PFV::MainForm::TryRecoTCHWInvoice(std::wstring rx_pattern)
 
 	if (std::regex_match(f->old_name, sm, reg))
 	{
-		this->txtCompany->Text = "TCHW";
-		this->txtFvIdent->Text = wstrtoustr(L"FV/" + sm[1].str() + L"/" + sm[2].str() + L"/" +
+		txtCompany->Text = "TCHW";
+		txtFvIdent->Text = wstrtoustr(L"FV/" + sm[1].str() + L"/" + sm[2].str() + L"/" +
 			sm[3].str());
-		this->txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
-		this->txtMonth->Text = wstrtoustr(sm[2]);
-		this->txtYear->Text = wstrtoustr(sm[3]);
-		this->cbTax->Text = "23";
-		this->txtPayment->Text = "T: ";
+		txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		txtMonth->Text = wstrtoustr(sm[2]);
+		txtYear->Text = wstrtoustr(sm[3]);
+		cbTax->Text = "23";
+		txtPayment->Text = "T: ";
 
 		return true;
 	}
@@ -808,11 +821,131 @@ bool PFV::MainForm::TryRecoWienkraInvoice(std::wstring rx_pattern)
 
 	if (std::regex_match(f->old_name, sm, reg))
 	{
-		this->txtCompany->Text = "Wienkra";
-		this->txtFvIdent->Text = wstrtoustr(L"FV/"+ sm[1].str() + L"/" + sm[2].str());
-		this->txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
-		this->txtMonth->Text = strtoustr(std::to_string(f->last_mod.month));
-		this->txtYear->Text = wstrtoustr(L"20"+ sm[2].str());
+		txtCompany->Text = "Wienkra";
+		txtFvIdent->Text = wstrtoustr(L"FV/"+ sm[1].str() + L"/" + sm[2].str());
+		txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		txtMonth->Text = strtoustr(std::to_string(f->last_mod.month));
+		txtYear->Text = wstrtoustr(L"20"+ sm[2].str());
+
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoSGKlimaInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		txtCompany->Text = "SGKlima";
+		txtFvIdent->Text = wstrtoustr(L"FS/" + sm[1].str() + L"/" + sm[2].str() + L"/" +
+			sm[3].str());
+		txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		txtMonth->Text = wstrtoustr(sm[2]);
+		txtYear->Text = wstrtoustr(sm[3]);
+
+		cbTax->Text = "23";
+		txtPayment->Text = "T: ";
+
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoWimarInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		txtCompany->Text = "Wimar";
+		txtFvIdent->Text = wstrtoustr(L"FVS-" + sm[1].str() + L"-" + sm[2].str() + L"-" +
+			sm[3].str());
+		txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		txtMonth->Text = wstrtoustr(sm[2]);
+		txtYear->Text = wstrtoustr(sm[3]);
+
+		cbTax->Text = "23";
+		txtPayment->Text = "T: ";
+
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoHerbudInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		txtCompany->Text = "Herbud";
+		txtFvIdent->Text = wstrtoustr(L"FS " + sm[1].str() + L"/" + sm[2].str() + L"/" +
+			sm[3].str() + L"/" + sm[4].str());
+		txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		txtMonth->Text = wstrtoustr(sm[3]);
+		txtYear->Text = wstrtoustr(sm[4]);
+
+		cbTax->Text = "23";
+		txtPayment->Text = "T: ";
+
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoOpenAIInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		txtCompany->Text = "OpenAI";
+		txtDescr->Text = "chat GPT";
+		txtFvIdent->Text = wstrtoustr(sm[1].str());
+		txtDay->Text = strtoustr(std::to_string(f->last_mod.day));
+		txtMonth->Text = strtoustr(std::to_string(f->last_mod.month));
+		txtYear->Text = strtoustr(std::to_string(f->last_mod.year));
+		txtGrossVal->Text = "82,69";
+		txtInvest->Text = "miesiêczne koszty firmy";
+		txtWhoPayed->Text = "MZ";
+		cbTax->Text = "23";
+		txtPayment->Text = "karta";
+
+		return true;
+	}
+	return false;
+}
+
+bool PFV::MainForm::TryRecoSzydloInvoice(std::wstring rx_pattern)
+{
+	const std::wregex reg(rx_pattern);
+	auto const& f = Globals::curr_file;
+	std::wsmatch sm;
+
+	if (std::regex_match(f->old_name, sm, reg))
+	{
+		txtCompany->Text = "Ksiêgowoœæ";
+		txtDescr->Text = "ksiêgowoœæ";
+		txtInvest->Text = "miesiêczne koszty firmy";
+		txtNetVal->Text = "680,00";
+		txtGrossVal->Text = "836,40";
+		txtFvIdent->Text = wstrtoustr(sm[1].str() + L"/" + sm[2].str() + L"/" + sm[3].str());
+		txtDay->Text = wstrtoustr(sm[1]);
+		txtMonth->Text = wstrtoustr(sm[2]);
+		txtYear->Text = wstrtoustr(sm[3]);
+
+		cbTax->Text = "23";
+		txtPayment->Text = "T: ";
 
 		return true;
 	}
@@ -861,7 +994,7 @@ void PFV::MainForm::WriteToTextBoxNextPageName(void)
 		num_page = L" str. 2";
 
 	file_ptr.new_name += num_page;
-	this->txtNewNotFvFilename->Text = wstrtoustr(file_ptr.new_name);
+	txtNewNotFvFilename->Text = wstrtoustr(file_ptr.new_name);
 }
 bool PFV::MainForm::AnotherPageAdd(void)
 {
@@ -870,7 +1003,7 @@ bool PFV::MainForm::AnotherPageAdd(void)
 	//if(Globals::curr_file->is_fv)
 	//	blabla
 	//else
-		check = this->NewNonFvAdd();
+		check = NewNonFvAdd();
 	
 	txtNewNotFvFilename->Clear();
 	return check;
@@ -939,7 +1072,7 @@ void PFV::MainForm::RenameAllFiles(void)
 void PFV::MainForm::CreateFoldersAndMoveFiles(void)
 {
 	std::wstring dir_name;
-	auto main_fv_dir = this->GetFvDirText();
+	auto main_fv_dir = GetFvDirText();
 	std::error_code ec;
 
 	for (const auto& fv : Globals::vecFvFromImg)
@@ -972,16 +1105,16 @@ void PFV::MainForm::ResetFilenameLabel(void)
 }
 void PFV::MainForm::InitOnMouseHoverTextBox(void)
 {
-	if (this->Controls->Find(L"rtxtOnMouseHover", true)->Length)
+	if (Controls->Find(L"rtxtOnMouseHover", true)->Length)
 		return;		// already initialised
-	this->rtxtOnMouseHover = (gcnew System::Windows::Forms::RichTextBox());
-	this->rtxtOnMouseHover->Name = L"rtxtOnMouseHover";
-	this->rtxtOnMouseHover->BorderStyle = System::Windows::Forms::BorderStyle::None;
-	this->rtxtOnMouseHover->ScrollBars = System::Windows::Forms::RichTextBoxScrollBars::None;
-	this->rtxtOnMouseHover->ReadOnly = true;
-	this->rtxtOnMouseHover->Visible = false;
-	this->rtxtOnMouseHover->BringToFront();
-	this->Controls->Add(this->rtxtOnMouseHover);
+	rtxtOnMouseHover = (gcnew System::Windows::Forms::RichTextBox());
+	rtxtOnMouseHover->Name = L"rtxtOnMouseHover";
+	rtxtOnMouseHover->BorderStyle = System::Windows::Forms::BorderStyle::None;
+	rtxtOnMouseHover->ScrollBars = System::Windows::Forms::RichTextBoxScrollBars::None;
+	rtxtOnMouseHover->ReadOnly = true;
+	rtxtOnMouseHover->Visible = false;
+	rtxtOnMouseHover->BringToFront();
+	Controls->Add(rtxtOnMouseHover);
 }
 std::wstring PFV::MainForm::TrimLongFileName(const std::wstring & fname)
 {
@@ -1002,14 +1135,14 @@ std::wstring PFV::MainForm::TrimLongFileName(const std::wstring & fname)
 
 void PFV::MainForm::FillInForTests()
 {
-	this->txtCompany->Text = "Caldo";
-	this->txtInvest->Text = "investition-test";
-	this->txtFvIdent->Text = wstrtoustr(L"Fv-123-test"+ Globals::curr_file->old_name);
-	this->txtNetVal->Text = "12+6/2";
-	this->txtGrossVal->Text = "14,76";
-	this->txtDescr->Text = "opis-test";
-	this->txtWhoPayed->Text = "MZ";
-	this->txtPayment->Text = "G";
-	this->txtDay->Text = "21";
-	this->txtMonth->Text = "11";
+	txtCompany->Text = "Caldo";
+	txtInvest->Text = "investition-test";
+	txtFvIdent->Text = wstrtoustr(L"Fv-123-test"+ Globals::curr_file->old_name);
+	txtNetVal->Text = "12+6/2";
+	txtGrossVal->Text = "14,76";
+	txtDescr->Text = "opis-test";
+	txtWhoPayed->Text = "MZ";
+	txtPayment->Text = "G";
+	txtDay->Text = "21";
+	txtMonth->Text = "11";
 }

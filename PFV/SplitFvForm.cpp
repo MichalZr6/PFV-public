@@ -26,19 +26,19 @@ void ProjektFaktury::SplitFvForm::ManageForm(FormState state)
 
 void ProjektFaktury::SplitFvForm::InitDynamicOutputBox()
 {
-	if (this->Controls->Find(L"rtxtDynamicOutput", true)->Length)
+	if (Controls->Find(L"rtxtDynamicOutput", true)->Length)
 		return;
-	this->rtxtDynamicOutput = (gcnew System::Windows::Forms::RichTextBox());
-	this->rtxtDynamicOutput->Name = L"rtxtDynamicOutput";
-	this->rtxtDynamicOutput->ReadOnly = true;
-	this->rtxtDynamicOutput->ScrollBars =
+	rtxtDynamicOutput = (gcnew System::Windows::Forms::RichTextBox());
+	rtxtDynamicOutput->Name = L"rtxtDynamicOutput";
+	rtxtDynamicOutput->ReadOnly = true;
+	rtxtDynamicOutput->ScrollBars =
 		System::Windows::Forms::RichTextBoxScrollBars::None;
-	this->rtxtDynamicOutput->Size =
+	rtxtDynamicOutput->Size =
 		System::Drawing::Size(txtInvestition->Width, (MAX_DYNAMIC_SHOW + 1) * 15);
-	this->rtxtDynamicOutput->TabStop = false;
-	this->rtxtDynamicOutput->Text = L"";
-	this->rtxtDynamicOutput->Visible = false;
-	this->Controls->Add(this->rtxtDynamicOutput);
+	rtxtDynamicOutput->TabStop = false;
+	rtxtDynamicOutput->Text = L"";
+	rtxtDynamicOutput->Visible = false;
+	Controls->Add(rtxtDynamicOutput);
 
 }
 
@@ -61,7 +61,7 @@ bool ProjektFaktury::SplitFvForm::CheckSplit()
 		txtNetVal->Clear();
 		txtGrossVal->Clear();
 		txtNetVal->Focus();
-		this->splitCount++;
+		splitCount++;
 		return false;
 	}
 	else
@@ -96,7 +96,7 @@ Fv_ptr ProjektFaktury::SplitFvForm::FvInfoFromInputs(const FvInfo& base)
 void ProjektFaktury::SplitFvForm::btnAdd_Click
 (System::Object^ sender, System::EventArgs^ e)
 {
-	this->splitCount--;
+	splitCount--;
 
 	FvInfo partFv;
 
@@ -104,7 +104,7 @@ void ProjektFaktury::SplitFvForm::btnAdd_Click
 	{
 		try
 		{
-			partFv = *this->FvInfoFromInputs(*Globals::vecFvFromImg.back());
+			partFv = *FvInfoFromInputs(*Globals::vecFvFromImg.back());
 			Globals::fvSplitter->SetPartFv(partFv);
 		}
 		catch (System::Exception^ e)
@@ -119,7 +119,7 @@ void ProjektFaktury::SplitFvForm::btnAdd_Click
 			rtxtProgramOutput->AppendText(FvToOutput(partFv));
 			ManageForm(FormState::ADDING_DELETING);
 
-			if (this->splitCount == 1)
+			if (splitCount == 1)
 			{
 				rtxtProgramOutput->AppendText(FvToOutput(*Globals::vecFvFromImg.back()));
 				ManageForm(FormState::NO_MORE_LEFT);
@@ -127,13 +127,13 @@ void ProjektFaktury::SplitFvForm::btnAdd_Click
 		}
 	}
 	else
-		this->Hide();
+		Hide();
 }
 
 void ProjektFaktury::SplitFvForm::txtInvestition_TextChanged
 (System::Object^ sender, System::EventArgs^ e)
 {
-	std::unordered_set<std::wstring> inv_set;
+	std::unordered_set<std::wstring> searchResult;
 	auto const search_string{ ustrtowstr(txtInvestition->Text->ToString()) };
 	unsigned short int i = 1;
 
@@ -148,16 +148,16 @@ void ProjektFaktury::SplitFvForm::txtInvestition_TextChanged
 
 	if (txtInvestition->Text->Length > TEXT_LEN_SHOW_ACTIVATE)
 	{
-		Globals::fv_list.SearchInvestition(search_string, inv_set);		// search in records from XLS file
-		Globals::SearchInvestition(search_string, inv_set);			// search in already added FvInfo companies
+		Globals::fv_list.SearchInvestition(search_string, searchResult);		// search in records from XLS file
+		Globals::SearchInvestition(search_string, searchResult);			// search in already added FvInfo companies
 
 		auto sc = search_string;
 
-		if (inv_set.size() > 0)
+		if (searchResult.size() > 0)
 		{
 			rtxtDynamicOutput->Visible = true;
 			rtxtDynamicOutput->Text = "Wybierz z klawiatury nr inwestycji:\n";
-			for (auto const &it : inv_set)
+			for (auto const &it : searchResult)
 			{
 				std::wstring inv = it;
 				if (i > MAX_DYNAMIC_SHOW) break;
@@ -190,7 +190,7 @@ void ProjektFaktury::SplitFvForm::txtInvestition_PreviewKeyDown
 	{
 		txtInvestition->Text = wstrtoustr(Globals::currShown[static_cast<int>(e->KeyCode) - 48]);
 		txtDescription->Focus();
-		this->numberKeyPressed = true;
+		numberKeyPressed = true;
 		rtxtDynamicOutput->Visible = false;
 	}
 	else if (e->KeyCode == Keys::Tab
@@ -198,11 +198,11 @@ void ProjektFaktury::SplitFvForm::txtInvestition_PreviewKeyDown
 		&& txtInvestition->Text->Length > TEXT_LEN_SHOW_ACTIVATE)
 	{
 		txtInvestition->Text = wstrtoustr(Globals::currShown[1]);
-		this->numberKeyPressed = true;
+		numberKeyPressed = true;
 		rtxtDynamicOutput->Visible = false;
 	}
 	else
-		this->numberKeyPressed = false;
+		numberKeyPressed = false;
 }
 
 void ProjektFaktury::SplitFvForm::SplitFvForm_Load
@@ -213,21 +213,21 @@ void ProjektFaktury::SplitFvForm::SplitFvForm_Load
 
 	rtxtHeadOutput->AppendText(FvToOutput(lastFv));
 
-	this->txtCompany->Text = wstrtoustr(lastFv.GetCompany());
-	this->txtFvIdent->Text = wstrtoustr(lastFv.GetInvoiceNumber());
+	txtCompany->Text = wstrtoustr(lastFv.GetCompany());
+	txtFvIdent->Text = wstrtoustr(lastFv.GetInvoiceNumber());
 
 	split_form = gcnew SplitCountAskForm(txtCompany->Text, txtFvIdent->Text);
-	this->Hide();
+	Hide();
 	split_form->ShowDialog();
 	if (split_form->is_valid_data)
 	{
-		this->splitCount = split_form->inv_count;
-		txtInvQuantity->Text = System::Convert::ToString(this->splitCount);
+		splitCount = split_form->inv_count;
+		txtInvQuantity->Text = System::Convert::ToString(splitCount);
 	}
 	else
-		this->Close();
+		Close();
 
-	Globals::fvSplitter.reset(new FvSplit(lastFv, this->splitCount));
+	Globals::fvSplitter.reset(new FvSplit(lastFv, splitCount));
 
 	split_form->~SplitCountAskForm();
 }

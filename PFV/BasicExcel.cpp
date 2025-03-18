@@ -236,7 +236,7 @@ bool Block::Create(const wchar_t* filename)
 	name[filenameLength] = 0;
 
 	// Open the file while truncating any existing file
-	bool ret = this->Open(filename, ios_base::in | ios_base::out | ios_base::trunc);
+	bool ret = Open(filename, ios_base::in | ios_base::out | ios_base::trunc);
 
 	delete[] name;
 
@@ -271,7 +271,7 @@ bool Block::Open(const wchar_t* filename, ios_base::openmode mode)
 		file_.seekp(0, ios_base::end);
 		fileSize_ = (ULONG) file_.tellp();
 	} else {
-		this->Close();
+		Close();
 		return false;
 	}
 
@@ -353,17 +353,17 @@ bool Block::Swap(SECT index1, SECT index2)
 			return true;
 
 		char* block1 = new char[blockSize_];
-		if (!this->Read(index1, block1))
+		if (!Read(index1, block1))
 			return false;
 
 		char* block2 = new char[blockSize_];
-		if (!this->Read(index2, block2))
+		if (!Read(index2, block2))
 			return false;
 
-		if (!this->Write(index1, block2))
+		if (!Write(index1, block2))
 			return false;
 
-		if (!this->Write(index2, block1))
+		if (!Write(index2, block1))
 			return false;
 
 		delete[] block1;
@@ -384,12 +384,12 @@ bool Block::Move(SECT from, SECT to)
 	if (from<indexEnd_ && to<indexEnd_) {
 		if (to > from) {
 			for(SECT i=from; i!=to; ++i) {
-				if (!this->Swap(i, i+1))
+				if (!Swap(i, i+1))
 					return false;
 			}
 		} else {
 			for(SECT i=from; i!=to; --i) {
-				if (!this->Swap(i, i-1))
+				if (!Swap(i, i-1))
 					return false;
 			}
 		}
@@ -409,17 +409,17 @@ bool Block::Insert(SECT index, const char* block)
 
 	if (index <= indexEnd_) {
 		// Write block to end of file
-		if (!this->Write(indexEnd_, block))
+		if (!Write(indexEnd_, block))
 			return false;
 
 		// Move block to index if necessary
 		if (index < indexEnd_-1)
-			return this->Move(indexEnd_-1, index);
+			return Move(indexEnd_-1, index);
 		else
 			return true;
 	} else {
 		// Write block to index after end of file
-		return this->Write(index, block);
+		return Write(index, block);
 	}
 }
 
@@ -684,7 +684,7 @@ CompoundFile::CompoundFile() :
 	block_(512), dirEntries_(0), propertyTrees_(0),
 	blocksIndices_(0), sblocksIndices_(0) {}
 
-CompoundFile::~CompoundFile() {this->Close();}
+CompoundFile::~CompoundFile() {Close();}
 
 /************************* Compound File Functions ***************************/
 bool CompoundFile::Create(const wchar_t* filename)
@@ -5065,9 +5065,9 @@ void BasicExcel::New(const BasicExcel &xls)
 
 	UpdateYExcelWorksheet();
 
-	for (int sheet_cnt = 0; sheet_cnt < this->GetTotalWorkSheets(); ++sheet_cnt)
+	for (int sheet_cnt = 0; sheet_cnt < GetTotalWorkSheets(); ++sheet_cnt)
 	{
-		BasicExcelWorksheet *sheet = this->GetWorksheet(sheet_cnt);
+		BasicExcelWorksheet *sheet = GetWorksheet(sheet_cnt);
 		for (int row = 0; row < sheet->maxRows_; ++row)
 		{
 			for (int col = 0; col < sheet->maxCols_; ++col)
@@ -6333,7 +6333,7 @@ void BasicExcelWorksheet::AddTextToPreviousCell(BasicExcelCell *cell)
 
     if(row >= maxRows_) return ;
 
-    BasicExcelCell *prev_cell = this->Cell(row-1, col);
+    BasicExcelCell *prev_cell = Cell(row-1, col);
 }
 
 void BasicExcelWorksheet::DeleteEmptyRows(int row, int empty_index)
@@ -6342,7 +6342,7 @@ void BasicExcelWorksheet::DeleteEmptyRows(int row, int empty_index)
     if(empty_index == maxRows_ - 1)
         return ;
 
-    while(this->Cell(empty_index++, 0)->ConvertCellToString().empty())
+    while(Cell(empty_index++, 0)->ConvertCellToString().empty())
     {
         if(empty_index >= maxRows_)
             return ;
@@ -6354,26 +6354,26 @@ void BasicExcelWorksheet::DeleteEmptyRows(int row, int empty_index)
     if(row == empty_index)
         return ;        //pierwszy wiersz od razu nie jest pusty
 
-    this->Cell(row++, 0)->SetString(this->Cell(empty_index, 0)->ConvertCellToString().c_str());
-	//std::cout << this->Cell(row-1, 0)->ConvertCellToString() << std::endl;
-    this->Cell(empty_index, 0)->EraseContents();
+    Cell(row++, 0)->SetString(Cell(empty_index, 0)->ConvertCellToString().c_str());
+	//std::cout << Cell(row-1, 0)->ConvertCellToString() << std::endl;
+    Cell(empty_index, 0)->EraseContents();
 
-    this->DeleteRows(row, empty_index);
+    DeleteRows(row, empty_index);
 }
 
 void BasicExcelWorksheet::DeleteRows(int row_start, int row_end)
 {
 	int distance = row_end - row_start;
 
-	if (row_start < 0 || row_end > this->maxRows_ || distance <= 0)
+	if (row_start < 0 || row_end > maxRows_ || distance <= 0)
 		return;
 
-	for (int row = row_start; row < this->maxRows_; ++row)
+	for (int row = row_start; row < maxRows_; ++row)
 	{
-		if (row + distance > this->maxRows_ - 1)
+		if (row + distance > maxRows_ - 1)
 			break;
 
-		for (int col = 0; col < this->maxCols_; ++col)
+		for (int col = 0; col < maxCols_; ++col)
 		{
 			cells_[row][col] = cells_[row + distance][col];
 		}
@@ -6400,7 +6400,7 @@ void BasicExcelWorksheet::ParseCells(int row, const std::vector<std::string> vUk
 
     static int kolejny_wiersz = 0;
 
-    BasicExcelCell *cell = this->Cell(row, 0);
+    BasicExcelCell *cell = Cell(row, 0);
 	std::string text = cell->ConvertCellToString();
 
     if(text.empty())
@@ -6408,23 +6408,23 @@ void BasicExcelWorksheet::ParseCells(int row, const std::vector<std::string> vUk
 
     if(text.length() > static_cast<size_t>(max_len))
     {
-        this->Cell(row, 0)->EraseContents();
+        Cell(row, 0)->EraseContents();
         return ;
     }
 
 	std::cout << "\n\nbadam tekst: " << text << std::endl;
 
-    if(this->czy_zawiera_uklad(text, vUklady))
+    if(czy_zawiera_uklad(text, vUklady))
     {
 		std::cout << "row: " << row << std::endl;
-		std::cout << "total: " << this->GetTotalRows() << std::endl;
+		std::cout << "total: " << GetTotalRows() << std::endl;
 
-        if(row == this->GetTotalRows())
+        if(row == GetTotalRows())
         {
 			std::cout << "ostatni wiersz..." << std::endl;
 
-            this->Cell(kolejny_wiersz++, 0)->SetString(this->Cell(row, 0)->ConvertCellToString().c_str());
-            this->Cell(row, 0)->EraseContents();
+            Cell(kolejny_wiersz++, 0)->SetString(Cell(row, 0)->ConvertCellToString().c_str());
+            Cell(row, 0)->EraseContents();
             return ;
         }
 
@@ -6432,7 +6432,7 @@ void BasicExcelWorksheet::ParseCells(int row, const std::vector<std::string> vUk
 
         row++;      /// sprawdź następny wiersz czy zawiera
 
-        if(!this->czy_zawiera_uklad(this->Cell(row, 0)->ConvertCellToString(), vUklady))
+        if(!czy_zawiera_uklad(Cell(row, 0)->ConvertCellToString(), vUklady))
         {
 
 			std::cout << "nie zawiera układu; dopisz do poprzedniego wiersza..." << std::endl;
@@ -6441,27 +6441,27 @@ void BasicExcelWorksheet::ParseCells(int row, const std::vector<std::string> vUk
 
                 do
                 {
-                    //cout << "badam tekst z komorki (row) nr: " << row << " = " << this->Cell(row, 0)->ConvertCellToString() << endl;
-                    if(this->Cell(row, 0)->ConvertCellToString().length() < static_cast<size_t>(max_len))
-                        text += " " + this->Cell(row, 0)->ConvertCellToString();
+                    //cout << "badam tekst z komorki (row) nr: " << row << " = " << Cell(row, 0)->ConvertCellToString() << endl;
+                    if(Cell(row, 0)->ConvertCellToString().length() < static_cast<size_t>(max_len))
+                        text += " " + Cell(row, 0)->ConvertCellToString();
 
-                    this->Cell(row++, 0)->EraseContents();
+                    Cell(row++, 0)->EraseContents();
 
-                    if(row > this->GetTotalRows()-1)
+                    if(row > GetTotalRows()-1)
                         return ;
 
-                } while(!(this->czy_zawiera_uklad(this->Cell(row, 0)->ConvertCellToString(), vUklady)));
+                } while(!(czy_zawiera_uklad(Cell(row, 0)->ConvertCellToString(), vUklady)));
 
             //cout << "text: " << text << " dla komorki nr: " << k << endl;
 
-            this->Cell(k, 0)->EraseContents();
-            this->Cell(kolejny_wiersz++, 0)->SetString(text.c_str());
+            Cell(k, 0)->EraseContents();
+            Cell(kolejny_wiersz++, 0)->SetString(text.c_str());
             return ;
         }
         else
         {
-            this->Cell(kolejny_wiersz++, 0)->SetString(this->Cell(row-1, 0)->ConvertCellToString().c_str());
-            this->Cell(row-1, 0)->EraseContents();
+            Cell(kolejny_wiersz++, 0)->SetString(Cell(row-1, 0)->ConvertCellToString().c_str());
+            Cell(row-1, 0)->EraseContents();
             return ;            /// kolejny wiersz po znalezieniu ukladu tez zawiera uklad
         }
     }
@@ -6475,9 +6475,9 @@ BasicExcelCell *BasicExcelWorksheet::GetCellWithText(const std::string &search_t
 {
     BasicExcelCell* cell;
 
-    for(int y=0; y < this->maxRows_; ++y) {
-		for(int x=0; x < this->maxCols_; ++x) {
-		    cell = this->Cell(y, x);
+    for(int y=0; y < maxRows_; ++y) {
+		for(int x=0; x < maxCols_; ++x) {
+		    cell = Cell(y, x);
 		    if(cell->CheckCellForText(search_text) != std::string::npos)
                 return &(cells_[y][x]);
 		}
@@ -6490,7 +6490,7 @@ BasicExcelCell *BasicExcelWorksheet::GetCellWithInteger(const int &search_int, c
 {
     for(int y=cell_range.getR_start(); y <= cell_range.getR_end(); y++) {
 		for(int x=cell_range.getC_start(); x <= cell_range.getC_end(); x++) {
-		    BasicExcelCell* cell = this->Cell(y, x);
+		    BasicExcelCell* cell = Cell(y, x);
 		    //if(cell->Type() != BasicExcelCell::UNDEFINED) cout << "cell: " << *cell << endl;
 		    if(cell->GetInteger() == search_int)
                 return &(cells_[y][x]);
@@ -6503,7 +6503,7 @@ BasicExcelCell *BasicExcelWorksheet::GetCellWithInteger(const int &search_int, c
 void BasicExcelWorksheet::InsertRow(int RowNumber, int NumberOfRows, int colRange)
 {
     BasicExcelCell *cell;
-    int rows_to_rewrite = this->maxRows_-RowNumber+NumberOfRows;
+    int rows_to_rewrite = maxRows_-RowNumber+NumberOfRows;
 	std::string temp;
 
 	std::cout << "rows to rewrite: " << rows_to_rewrite << std::endl;
@@ -6511,17 +6511,17 @@ void BasicExcelWorksheet::InsertRow(int RowNumber, int NumberOfRows, int colRang
     if(NumberOfRows == 0)
         return ;
 
-    if(RowNumber >= this->maxRows_)
+    if(RowNumber >= maxRows_)
         return ;
 
     for(int i=0; i <= rows_to_rewrite; i++)
     {
-        for(int j=0; j < this->maxCols_; j++)
+        for(int j=0; j < maxCols_; j++)
         {
-            cell = this->Cell(this->maxRows_-i-1, j);
-            temp = this->Cell(this->maxRows_-i-1, 0)->GetString();
-            this->Cell(this->maxRows_-i-1+NumberOfRows, j)->SetCell(cell);
-            this->Cell(this->maxRows_-i-1, j)->EraseContents();
+            cell = Cell(maxRows_-i-1, j);
+            temp = Cell(maxRows_-i-1, 0)->GetString();
+            Cell(maxRows_-i-1+NumberOfRows, j)->SetCell(cell);
+            Cell(maxRows_-i-1, j)->EraseContents();
         }
     }
 }
@@ -6727,10 +6727,10 @@ BasicExcelCell::BasicExcelCell(const BasicExcelCell & other)
 
 BasicExcelCell & BasicExcelCell::operator=(const BasicExcelCell& other)
 {
-	this->type_ = other.type_;
-	this->_xf_idx = other._xf_idx;
-	this->mergedRows_ = other.mergedRows_;
-	this->mergedColumns_ = other.mergedColumns_;
+	type_ = other.type_;
+	_xf_idx = other._xf_idx;
+	mergedRows_ = other.mergedRows_;
+	mergedColumns_ = other.mergedColumns_;
 	return *this;
 }
 
@@ -6741,10 +6741,10 @@ BasicExcelCell::BasicExcelCell(BasicExcelCell&& other)
 
 BasicExcelCell & BasicExcelCell::operator=(BasicExcelCell &&other)
 {
-	this->type_ = other.type_;
-	this->_xf_idx = other._xf_idx;
-	this->mergedRows_ = other.mergedRows_;
-	this->mergedColumns_ = other.mergedColumns_;
+	type_ = other.type_;
+	_xf_idx = other._xf_idx;
+	mergedRows_ = other.mergedRows_;
+	mergedColumns_ = other.mergedColumns_;
 
 	other.type_ = UNDEFINED;
 	other._xf_idx = 0;
@@ -6759,10 +6759,10 @@ BasicExcelCell & BasicExcelCell::operator=(BasicExcelCell &&other)
 
 RangeOfCells::RangeOfCells()
 {
-    this->_row_start = 0;
-    this->_row_end = 0;
-    this->_col_start = 0;
-    this->_col_end = 0;
+    _row_start = 0;
+    _row_end = 0;
+    _col_start = 0;
+    _col_end = 0;
 }
 
 RangeOfCells::RangeOfCells(const unsigned short &row_start, const unsigned short &row_end, 
@@ -6774,39 +6774,39 @@ RangeOfCells::RangeOfCells(const unsigned short &row_start, const unsigned short
     }
     else
     {
-        this->_row_start = row_start;
-        this->_row_end = row_end;
-        this->_col_start = col_start;
-        this->_col_end = col_end;
+        _row_start = row_start;
+        _row_end = row_end;
+        _col_start = col_start;
+        _col_end = col_end;
     }
 }
 
 unsigned short RangeOfCells::getR_start() const
 {
-    return this->_row_start;
+    return _row_start;
 }
 
 unsigned short RangeOfCells::getR_end() const
 {
-    return this->_row_end;
+    return _row_end;
 }
 
 unsigned short RangeOfCells::getC_start() const
 {
-    return this->_col_start;
+    return _col_start;
 }
 
 unsigned short RangeOfCells::getC_end() const
 {
-    return this->_col_end;
+    return _col_end;
 }
 
 void RangeOfCells::Modify(unsigned short row_start, unsigned short row_end, unsigned short col_start, unsigned short col_end)
 {
-    if(row_start) this->_row_start = row_start;
-    if(row_end) this->_row_end = row_end;
-    if(col_start) this->_col_start = col_start;
-    if(col_end) this->_col_end = col_end;
+    if(row_start) _row_start = row_start;
+    if(row_end) _row_end = row_end;
+    if(col_start) _col_start = col_start;
+    if(col_end) _col_end = col_end;
 }
 
 void BasicExcelCell::SetCell(const BasicExcelCell *cell)
@@ -6814,23 +6814,23 @@ void BasicExcelCell::SetCell(const BasicExcelCell *cell)
 	switch(cell->Type())
 	{
 		case BasicExcelCell::UNDEFINED:
-			this->EraseContents();
+			EraseContents();
 			break;
 
 		case BasicExcelCell::INT:
-			this->SetInteger(cell->GetInteger());
+			SetInteger(cell->GetInteger());
 			break;
 
 		case BasicExcelCell::DOUBLE:
-			this->SetDouble(cell->GetDouble());
+			SetDouble(cell->GetDouble());
 			break;
 
 		case BasicExcelCell::STRING:
-			this->SetString(cell->GetString());
+			SetString(cell->GetString());
 			break;
 
 		case BasicExcelCell::WSTRING:
-			this->SetWString(cell->GetWString());
+			SetWString(cell->GetWString());
 			break;
 	}
 }
@@ -6883,14 +6883,14 @@ void BasicExcelCell::SetRow(int row)
 
     if(type_ == 3)
     {
-        cell_String = this->GetString();
+        cell_String = GetString();
 
         if(cell_String.find(text) != string::npos)
             ret_flag = true;
     }
     else if(type_ == 4)
     {
-        cell_WString = this->GetWString();
+        cell_WString = GetWString();
         wtext = StringToWString(text);
         if(cell_WString.find(wtext) != wstring::npos)
         {
@@ -6907,14 +6907,14 @@ void BasicExcelCell::SetRow(int row)
     {
         if(type_ == 3)
         {
-            cell_String = this->GetString();
+            cell_String = GetString();
 
             if(cell_String.find(text) != string::npos)
                 ret_flag = true;
         }
         else if(type_ == 4)
         {
-            cell_WString = this->GetWString();
+            cell_WString = GetWString();
             wtext = StringToWString(text);
             if(cell_WString.find(wtext) != wstring::npos)
                 ret_flag = true;
@@ -6934,10 +6934,10 @@ size_t BasicExcelCell::CheckCellForText(std::string text)
     text = to_upper(text);
 
     if(type_ == 4)
-        cell_String = to_upper(WStringToString(this->GetWString()));
+        cell_String = to_upper(WStringToString(GetWString()));
 	else if (type_ == 3)
 	{
-		cell_String = this->GetString();
+		cell_String = GetString();
 		to_upper(cell_String);
 	}
     else return std::string::npos;
@@ -6950,12 +6950,12 @@ std::string BasicExcelCell::ConvertCellToString()
 {
 	std::stringstream ssCell;
 
-    if(this->Type() == BasicExcelCell::STRING)
-    ssCell << this->GetString();
+    if(Type() == BasicExcelCell::STRING)
+    ssCell << GetString();
     else if(type_ == BasicExcelCell::INT)
-    ssCell << this->GetInteger();
+    ssCell << GetInteger();
     else if(type_ == BasicExcelCell::DOUBLE)
-    ssCell << this->GetDouble();
+    ssCell << GetDouble();
     else if(type_ == BasicExcelCell::WSTRING)
     ssCell << narrow_string(wstr_);
 
@@ -7116,10 +7116,10 @@ civil_from_days(int z) noexcept
 std::string BasicExcelCell::GetDate() const
 {
 	if (type_ == STRING)
-		return this->GetString();
+		return GetString();
 	else if (type_ == DOUBLE)
 	{
-		auto tpl = civil_from_days(this->GetInteger());
+		auto tpl = civil_from_days(GetInteger());
 		auto y = std::to_string(std::get<0>(tpl));
 		auto m = std::to_string(std::get<1>(tpl));
 		auto d = std::to_string(std::get<2>(tpl));
