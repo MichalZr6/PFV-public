@@ -12,6 +12,12 @@ PFV/FV/
 *.user
 *.userosscache
 *.sln.docstates
+*.xls
+*.csv
+*.xlsm
+
+# Ignore the FV directory
+FV/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
